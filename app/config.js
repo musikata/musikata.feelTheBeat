@@ -5,16 +5,17 @@
 require.config({
   deps:            ['main'],
   paths: {
-    lib:           '../lib/',
-    app:           '.',
-    text:          '/lib/requirejs-text/text',
-    hbs:           '/lib/backbone.marionette.hbs/backbone.marionette.hbs',
-    jquery:        '/lib/jquery/jquery',
-    handlebars:    '/lib/handlebars/handlebars',
-    lodash:        '/lib/lodash/lodash',
-    backbone:      '/lib/backbone/backbone',
-    marionette:    '/lib/backbone.marionette/lib/backbone.marionette'
+    lib: '../lib/',
+    text: '../lib/requirejs-text/text',
+    jquery: '../lib/jquery/jquery',
+    lodash: '../lib/lodash/lodash',
+    backbone: '../lib/backbone/backbone',
+    marionette: '../lib/backbone.marionette'
   },
+
+  packages: [
+    {name: 'myApp', location: '.'}
+  ],
 
   shim: {
     'backbone': {
@@ -26,10 +27,6 @@ require.config({
       deps: ['backbone'],
       exports: 'Backbone.Marionette'
     },
-
-    'handlebars': {
-      exports: 'Handlebars'
-    }
 
   }
 });

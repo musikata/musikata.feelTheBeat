@@ -2,13 +2,24 @@ module.exports = function(grunt) {
 
   'use strict';
 
+  // Load grunt contrib tasks.
+  require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
+
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+
+    connect: {
+      all: {
+        options:{
+          port: 9000,
+          keepalive: true
+        }
+      }
+    },
 
     jshint: {
       files: [
         'Gruntfile.js',
-        'tests/app/**/*.js',
         'app/**/*.js'
       ],
       options: {
@@ -18,7 +29,7 @@ module.exports = function(grunt) {
 
     watch: {
       files: ['<%= jshint.files %>'],
-      tasks: ['jshint', 'shell:test']
+      tasks: ['jshint']
     },
 
     copy: {
@@ -26,16 +37,6 @@ module.exports = function(grunt) {
         files: {
           'prod/app/index.html': 'app/index.html',
           'prod/assets/css/app/': 'assets/css/**'
-        }
-      }
-    },
-
-    shell: {
-      test: {
-        command: 'node node_modules/karma/bin/karma start',
-        options: {
-          stdout: true,
-          stderr: true
         }
       }
     },
@@ -65,7 +66,6 @@ module.exports = function(grunt) {
           paths: {
             app:           '.',
             text:          '../lib/require-text/text',
-            hbs:           '../lib/backbone.marionette.hbs/backbone.marionette.hbs',
             jquery:        '../lib/jquery/jquery',
             handlebars:    '../lib/handlebars/handlebars',
             lodash:        '../lib/lodash/lodash',
@@ -82,10 +82,6 @@ module.exports = function(grunt) {
               deps: ['backbone'],
               exports: 'Backbone.Marionette'
             },
-
-            'handlebars': {
-              exports: 'Handlebars'
-            }
           },
           out: "prod/app/main.js",
           name: "main"
@@ -95,14 +91,8 @@ module.exports = function(grunt) {
 
   });
 
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-requirejs');
-  grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-shell');
-
+  grunt.registerTask('server',['connect']);
   grunt.registerTask('default', ['jshint']);
-  grunt.registerTask('test', ['shell:test']);
   grunt.registerTask('build', ['jshint', 'copy', 'requirejs']);
 
 };

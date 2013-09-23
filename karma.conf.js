@@ -9,42 +9,28 @@ module.exports = function(config) {
 
 
     // frameworks to use
-    frameworks: ['mocha', 'requirejs'],
+    frameworks: ['jasmine', 'requirejs'],
 
 
     // list of files / patterns to load in the browser
     files: [
-      // put all components in requirejs 'paths' config here (included: false)
-      //{ pattern: 'lib/**/*.js', watched: false, included: false},
+
+      // Source and test files.
       { pattern: 'app/**/*.js', watched: true, included: false},
 
-      // all src and test modules (included: false)
-      { pattern: 'tests/app/collections/*.js', watched: true, included: false },
-      { pattern: 'tests/app/models/*.js', watched: true, included: false },
-      { pattern: 'tests/app/views/*.js', watched: true, included: false },
+      // Libs.
+      { pattern: 'bower_components/**/*.js', watched: false, included: false},
 
-      // libs required for test framework
-      { pattern: 'tests/lib/sinon.js', watched: false, included: true },
-      { pattern: 'lib/expect/expect.js', watched: false, included: true},
-
-      // app config require module last
-      { pattern: 'lib/requirejs-text/text.js', watched: false, included: false},
-      { pattern: 'lib/jquery/jquery.js', watched: false, included: false},
-      { pattern: 'lib/lodash/lodash.js', watched: false, included: false},
-      { pattern: 'lib/backbone/backbone.js', watched: false, included: false},
-      { pattern: 'lib/backbone.marionette/lib/backbone.marionette.js', watched: false, included: false},
-      { pattern: 'lib/handlebars/handlebars.js', watched: false, included: false},
-      { pattern: 'lib/backbone.marionette.hbs/backbone.marionette.hbs.js', watched: false, included: false},
-
-      'tests/app/config.js'
+      // Main test runner.
+      'test-main.js'
     ],
 
 
     // list of files to exclude
     exclude: [
+      // Don't include the normal require config.
       'app/config.js'
     ],
-
 
     // test results reporter to use
     // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
@@ -85,6 +71,6 @@ module.exports = function(config) {
 
     // Continuous Integration mode
     // if true, it capture browsers, run tests and exit
-    singleRun: true
+    singleRun: false
   });
 };

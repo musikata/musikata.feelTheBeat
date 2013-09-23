@@ -2,23 +2,14 @@
 // # main
 //
 
-require([
-  'helpers/namespace',
-  'router',
-  'models/config'
+require(
+  [
+    './app'
 ],
-
-function (app, router, Config) {
+function (app) {
 
   'use strict';
 
-  var config = new Config(),
-      options = config.toJSON();
-
-  app.reqres.setHandler('config', function () {
-    return options;
-  });
-
-  app.start(options);
+  console.log('hello app');
 
 });
