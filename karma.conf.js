@@ -17,6 +17,7 @@ module.exports = function(config) {
 
       // Source and test files.
       { pattern: 'app/**/*.js', watched: true, included: false},
+      { pattern: 'app/**/*.html', watched: true, included: false},
 
       // Libs.
       { pattern: 'lib/**/*.js', watched: false, included: false},

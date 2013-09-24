@@ -5,7 +5,7 @@ require.config({
     jquery: 'lib/jquery/jquery',
     lodash: 'lib/lodash/lodash',
     backbone: 'lib/backbone/backbone',
-    marionette: 'lib/backbone.marionette'
+    marionette: 'lib/backbone.marionette/lib/core/backbone.marionette'
   },
 
   packages: [
