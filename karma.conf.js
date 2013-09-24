@@ -21,8 +21,8 @@ module.exports = function(config) {
       // Libs.
       { pattern: 'lib/**/*.js', watched: false, included: false},
 
-      // Normal require config.
-      'require.config.js',
+      // shared require config.
+      'require.shared.js',
 
       // Main test runner.
       'test-main.js'
