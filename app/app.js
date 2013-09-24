@@ -1,8 +1,5 @@
-//
-// # main
-//
-
-define([
+define(
+  [
 ],
 function () {
 

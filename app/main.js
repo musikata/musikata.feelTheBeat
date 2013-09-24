@@ -1,15 +1,11 @@
-//
-// # main
-//
-
 require(
   [
-    './app'
+    './app.js'
 ],
 function (app) {
 
   'use strict';
 
-  console.log('hello app');
+  console.log('hello app', app);
 
 });
