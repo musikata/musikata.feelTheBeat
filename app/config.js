@@ -14,7 +14,7 @@ require.config({
   },
 
   packages: [
-    {name: 'myApp', location: '.'}
+    {name: 'app', location: '.'}
   ],
 
   shim: {

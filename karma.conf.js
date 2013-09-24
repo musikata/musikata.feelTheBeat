@@ -19,7 +19,7 @@ module.exports = function(config) {
       { pattern: 'app/**/*.js', watched: true, included: false},
 
       // Libs.
-      { pattern: 'bower_components/**/*.js', watched: false, included: false},
+      { pattern: 'lib/**/*.js', watched: false, included: false},
 
       // Main test runner.
       'test-main.js'
