@@ -36,6 +36,10 @@ module.exports = function(config) {
       'app/config.js'
     ],
 
+    // Set preprocessers to be empty, so that .html files
+    // will be served as html for require.js text plugin.
+    preprocessors: {},
+
     // test results reporter to use
     // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
     reporters: ['progress'],
