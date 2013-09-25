@@ -1,13 +1,10 @@
 'use strict';
 
-var tests = [];
-for (var file in window.__karma__.files) {
-  if (window.__karma__.files.hasOwnProperty(file)) {
-    if (/spec\.js$/.test(file)) {
-      tests.push(file);
-    }
-  }
-}
+var tests = Object.keys(window.__karma__.files).filter(function (file) {
+  return /\.spec\.js$/.test(file);
+}).map(function(file){
+  return file.replace(/^\/base\/|\.js$/g,'');
+});
 
 require.config({
   baseUrl: '/base',
