@@ -5,7 +5,13 @@ require.config({
     jquery: 'lib/jquery/jquery',
     lodash: 'lib/lodash/lodash',
     backbone: 'lib/backbone/backbone',
-    marionette: 'lib/backbone.marionette/lib/core/backbone.marionette'
+    marionette: 'lib/marionette/lib/backbone.marionette'
+  },
+
+  map: {
+    "*": {
+      "underscore" : "lodash"
+    }
   },
 
   packages: [
