@@ -5,12 +5,15 @@ require.config({
     jquery: 'lib/jquery/jquery',
     lodash: 'lib/lodash/lodash',
     backbone: 'lib/backbone/backbone',
-    marionette: 'lib/marionette/lib/backbone.marionette'
+    marionette: 'lib/marionette/lib/backbone.marionette',
+    handlebars: 'lib/handlebars/handlebars',
+    stickit: 'lib/backbone.stickit/backbone.stickit'
   },
 
   map: {
     "*": {
-      "underscore" : "lodash"
+      "underscore" : "lodash",
+      "musikata": "app"
     }
   },
 
@@ -28,6 +31,14 @@ require.config({
       deps: ['backbone'],
       exports: 'Backbone.Marionette'
     },
+
+    'handlebars': {
+      exports: 'Handlebars'
+    },
+
+    'stickit': {
+      deps: ['backbone'],
+    }
 
   }
 });
