@@ -2,42 +2,44 @@
 // Generated on Tue Aug 13 2013 10:37:52 GMT+0100 (BST)
 
 module.exports = function(config) {
+
+  var specFiles = require('./specFiles.js').files;
+
+  var srcFiles = [
+    { pattern: 'src/**/*.js', watched: true, included: false},
+    { pattern: 'src/**/*.html', watched: true, included: false}
+  ];
+
+  var libFiles = [
+    { pattern: 'bower_components/**/*.js', watched: false, included: false}
+  ];
+
+  var configFiles = [
+    {pattern: 'test/specFiles.js', watched: true, included: false},
+    'require.common.js',
+    'test/require.test.js',
+    'test/test-main.js'
+  ];
+
+
   config.set({
 
     // base path, that will be used to resolve files and exclude
-    basePath: '',
-
+    basePath: '../',
 
     // frameworks to use
     frameworks: ['jasmine', 'requirejs'],
 
-
     // list of files / patterns to load in the browser
-    files: [
-
-      // Jasmine-ajax plugin.
-      'lib/jasmine-ajax/lib/mock-ajax.js',
-
-      // Source and test files.
-      { pattern: 'app/**/*.js', watched: true, included: false},
-      { pattern: 'app/**/*.html', watched: true, included: false},
-
-      // Libs.
-      { pattern: 'lib/**/*.js', watched: false, included: false},
-
-      // shared require config.
-      'require.shared.js',
-
-      // Main test runner.
-      'test-main.js'
-    ],
-
+    files: []
+      .concat(specFiles)
+      .concat(srcFiles)
+      .concat(libFiles)
+      .concat(configFiles)
+      ,
 
     // list of files to exclude
-    exclude: [
-      // Don't include the normal require config.
-      'app/config.js'
-    ],
+    exclude: [],
 
     // Set preprocessers to be empty, so that .html files
     // will be served as html for require.js text plugin.
