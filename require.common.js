@@ -12,8 +12,7 @@ require.config({
 
   map: {
     "*": {
-      "underscore" : "lodash",
-      "musikata": "app"
+      "underscore" : "lodash"
     }
   },
 
@@ -34,7 +33,7 @@ require.config({
 
     'marionette': {
       deps: ['backbone'],
-      exports: 'Backbone.Marionette'
+      exports: 'Marionette'
     },
 
     'handlebars': {

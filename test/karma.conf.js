@@ -17,7 +17,6 @@ module.exports = function(config) {
   var configFiles = [
     {pattern: 'test/specFiles.js', watched: true, included: false},
     'require.common.js',
-    'test/require.test.js',
     'test/test-main.js'
   ];
 
@@ -32,11 +31,10 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: []
-      .concat(specFiles)
-      .concat(srcFiles)
-      .concat(libFiles)
-      .concat(configFiles)
-      ,
+    .concat(specFiles)
+    .concat(srcFiles)
+    .concat(libFiles)
+    .concat(configFiles),
 
     // list of files to exclude
     exclude: [],
