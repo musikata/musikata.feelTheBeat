@@ -1,12 +1,13 @@
-require(
-    [
-    'marionette',
-    'handlebars'
+define(
+  [
+  'marionette',
+  'handlebars'
 ],
 function(
-    Marionette,
-    Handlebars
+  Marionette,
+  Handlebars
 ){
   'use strict';
-  console.log('hello boilerplate');
+  var ThisApp = {};
+  return ThisApp;
 });

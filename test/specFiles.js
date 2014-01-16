@@ -3,6 +3,7 @@
 // confusing Karma with missing AMD dependencies.
 
 var specFiles = [
+  'ThisApp.spec.js'
 ];
 
 // Prefix specs with specsDir.

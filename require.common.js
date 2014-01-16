@@ -6,6 +6,7 @@ require.config({
     jquery: BOWER_DIR + '/jquery/jquery',
     backbone: BOWER_DIR + '/backbone/backbone',
     underscore: BOWER_DIR + '/underscore/underscore',
+    lodash: BOWER_DIR + '/lodash/lodash',
     marionette: BOWER_DIR + '/marionette/lib/backbone.marionette',
     handlebars: BOWER_DIR + '/handlebars/handlebars',
   },
