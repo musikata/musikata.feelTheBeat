@@ -31,72 +31,97 @@ define(function(require){
       });
 
       describe('ui elements', function(){
-        it('should show the instructions', function(){
-          expect(view.$el.find('.instructions').length).toBe(1);
-        });
-
         it('should show the drum', function(){
           expect(view.$el.find('.drum').length).toBe(1);
         });
       });
 
       describe('tap/mouse/click events', function(){
-        var tapDownSpy = jasmine.createSpy('tapDown');
-        var tapUpSpy = jasmine.createSpy('tapUp');
+        var tapStartSpy = jasmine.createSpy('tapStart');
+        var tapEndSpy = jasmine.createSpy('tapEnd');
+
         beforeEach(function(){
-          view.on('drumTapDown', tapDownSpy);
-          view.on('drumTapUp', tapUpSpy);
+          view.on('drumTapStart', tapStartSpy);
+          view.on('drumTapEnd', tapEndSpy);
         });
 
-        it("should call onDrumTapDown for touchstart", function(){
+        it("should trigger 'drumTapStart' for touchstart", function(){
           view.ui.drum.trigger('touchstart');
-          expect(tapDownSpy).toHaveBeenCalled();
+          expect(tapStartSpy).toHaveBeenCalled();
         });
 
-        it("should call onDrumTapUpfor touchend", function(){
+        it("should trigger 'drumTapEnd' for touchend", function(){
           view.ui.drum.trigger('touchend');
-          expect(tapUpSpy).toHaveBeenCalled();
+          expect(tapEndSpy).toHaveBeenCalled();
         });
 
-        it("should call onDrumTapDown for mousedown", function(){
+        it("should trigger 'drapTapStart' for mousedown", function(){
           view.ui.drum.trigger('mousedown');
-          expect(tapDownSpy).toHaveBeenCalled();
+          expect(tapStartSpy).toHaveBeenCalled();
         });
 
-        it("should call onDrumTapUpfor mouseup", function(){
+        it("should trigger 'drumTapEnd' for mouseup", function(){
           view.ui.drum.trigger('mouseup');
-          expect(tapUpSpy).toHaveBeenCalled();
+          expect(tapEndSpy).toHaveBeenCalled();
         });
 
-        it("should call onDrumTapDown for spacebar down", function(){
+        it("should trigger 'drumTapStart' for spacebar down", function(){
           var e = $.Event("keydown");
           e.keyCode = 32;
           view.$el.trigger(e);
-          expect(tapDownSpy).toHaveBeenCalled();
+          expect(tapStartSpy).toHaveBeenCalled();
         });
 
-        it("should call onDrumTapUpfor spacebar up", function(){
+        it("should trigger 'drumTapEnd' for spacebar up", function(){
           var e = $.Event("keyup");
           e.keyCode = 32;
           view.$el.trigger(e);
-          expect(tapUpSpy).toHaveBeenCalled();
+          expect(tapEndSpy).toHaveBeenCalled();
         });
       });
 
-      describe('before the first tap', function(){
+      ddescribe('initial state', function(){
 
-        it('should change the drum class on tap change', function(){
-          this.fail('NOT IMPLEMENTED');
+        describe('ui elements', function(){
+
+          it('should show the instructions', function(){
+            expect(view.$el.find('.instructions').length).toBe(1);
+          });
+
+          it('should show the drum', function(){
+            expect(view.$el.find('.drum').length).toBe(1);
+          });
         });
 
-        it('should start the beat when the drum is tapped', function(){
-          this.fail('NOT IMPLEMENTED');
-        });
 
-        it('should trigger a sound event for the first tap the first time', function(){
-          this.fail('NOT IMPLEMENTED');
-        });
+        describe('before the first tap', function(){
 
+          it("should 'active' class on drum class on tap down", function(){
+            view.trigger('drumTapDown');
+            expect(view.ui.drum.hasClass('active')).toBe(true);
+          });
+
+          it("should remove 'active' class on drum class on tap up", function(){
+            view.trigger('drumTapDown');
+            view.trigger('drumTapUp');
+            expect(view.ui.drum.hasClass('active')).toBe(false);
+          });
+
+          it("should trigger 'beat:start' event when the drum is tapped", function(){
+            var beatStartSpy = jasmine.createSpy('beat:start');
+            view.on('beat:start', beatStartSpy);
+            view.trigger('drumTapDown');
+            expect(beatStartSpy).toHaveBeenCalled();
+          });
+
+          it('should trigger a "tap:play" event for the first tap', function(){
+            var tapPlaySpy = jasmine.createSpy('tap:play');
+            view.on('tap:play', tapPlaySpy);
+            view.trigger('drumTapDown');
+            expect(tapPlaySpy).toHaveBeenCalled();
+          });
+
+        });
       });
 
       it('should trigger beat events until the number of beats is done', function(){

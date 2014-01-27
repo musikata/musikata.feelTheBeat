@@ -12,38 +12,61 @@ define(function(require){
     },
 
     events: {
-      "touchstart @ui.drum": "drumTapDown",
-      "mousedown @ui.drum": "drumTapDown",
-      "touchend @ui.drum": "drumTapUp",
-      "mouseup @ui.drum": "drumTapUp",
+      "touchstart @ui.drum": "drumTapStart",
+      "mousedown @ui.drum": "drumTapStart",
+      "touchend @ui.drum": "drumTapEnd",
+      "mouseup @ui.drum": "drumTapEnd",
       "keydown": "onKeyDown",
       "keyup": "onKeyUp",
     },
 
-    onRender: function(){
-      this.on('drumTapDown', this.onDrumTapDown, this);
-      this.on('drumTapUp', this.onDrumTapUp, this);
+    modelEvents: {
+      "change:state": "onChangeState"
     },
 
-    drumTapDown: function(){
-      this.trigger("drumTapDown");
+    onRender: function(){
+      this.model.set('state', 'initial');
+    },
+
+    onChangeState: function(model, state){
+      if (state === 'initial'){
+        this.onInitialState();
+      }
+    },
+
+    // Wire events for initial state.
+    onInitialState: function(){
+      // Wire drum tap events.
+      this.on('drumTapDown', function(){
+        this.ui.drum.addClass('active');
+        this.trigger('beat:start');
+        this.trigger('tap:play');
+      }, this);
+
+      this.on('drumTapUp', function(){
+        this.ui.drum.removeClass('active');
+      }, this);
+    },
+
+    drumTapStart: function(){
+      this.trigger("drumTapStart");
     },
     
-    drumTapUp: function(){
-      this.trigger("drumTapUp");
+    drumTapEnd: function(){
+      this.trigger("drumTapEnd");
     },
 
     onKeyDown: function(e){
       // Spacebar.
       if (e.keyCode == 32){
-        this.trigger("drumTapDown");
+        this.drumTapStart();
       }
     },
 
     onKeyUp: function(e){
       // Spacebar.
       if (e.keyCode == 32){
-        this.trigger("drumTapUp");
+        this.drumTapEnd();
       }
     }
 
