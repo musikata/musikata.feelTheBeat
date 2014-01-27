@@ -41,50 +41,51 @@ define(function(require){
       });
 
       describe('tap/mouse/click events', function(){
+        var tapDownSpy = jasmine.createSpy('tapDown');
+        var tapUpSpy = jasmine.createSpy('tapUp');
         beforeEach(function(){
-          spyOn(view, 'onDrumTapDown');
-          spyOn(view, 'onDrumTapUp');
-          view.delegateEvents();
+          view.on('drumTapDown', tapDownSpy);
+          view.on('drumTapUp', tapUpSpy);
         });
 
         it("should call onDrumTapDown for touchstart", function(){
           view.ui.drum.trigger('touchstart');
-          expect(view.onDrumTapDown).toHaveBeenCalled();
+          expect(tapDownSpy).toHaveBeenCalled();
         });
 
         it("should call onDrumTapUpfor touchend", function(){
           view.ui.drum.trigger('touchend');
-          expect(view.onDrumTapUp).toHaveBeenCalled();
+          expect(tapUpSpy).toHaveBeenCalled();
         });
 
         it("should call onDrumTapDown for mousedown", function(){
           view.ui.drum.trigger('mousedown');
-          expect(view.onDrumTapDown).toHaveBeenCalled();
+          expect(tapDownSpy).toHaveBeenCalled();
         });
 
         it("should call onDrumTapUpfor mouseup", function(){
           view.ui.drum.trigger('mouseup');
-          expect(view.onDrumTapUp).toHaveBeenCalled();
+          expect(tapUpSpy).toHaveBeenCalled();
         });
 
         it("should call onDrumTapDown for spacebar down", function(){
           var e = $.Event("keydown");
           e.keyCode = 32;
           view.$el.trigger(e);
-          expect(view.onDrumTapDown).toHaveBeenCalled();
+          expect(tapDownSpy).toHaveBeenCalled();
         });
 
         it("should call onDrumTapUpfor spacebar up", function(){
           var e = $.Event("keyup");
           e.keyCode = 32;
           view.$el.trigger(e);
-          expect(view.onDrumTapUp).toHaveBeenCalled();
+          expect(tapUpSpy).toHaveBeenCalled();
         });
       });
 
       describe('before the first tap', function(){
 
-        it('should change the drum class on tap', function(){
+        it('should change the drum class on tap change', function(){
           this.fail('NOT IMPLEMENTED');
         });
 

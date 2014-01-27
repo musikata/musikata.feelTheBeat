@@ -12,33 +12,38 @@ define(function(require){
     },
 
     events: {
-      "touchstart @ui.drum": "onDrumTapDown",
-      "mousedown @ui.drum": "onDrumTapDown",
-      "touchend @ui.drum": "onDrumTapUp",
-      "mouseup @ui.drum": "onDrumTapUp",
+      "touchstart @ui.drum": "drumTapDown",
+      "mousedown @ui.drum": "drumTapDown",
+      "touchend @ui.drum": "drumTapUp",
+      "mouseup @ui.drum": "drumTapUp",
       "keydown": "onKeyDown",
       "keyup": "onKeyUp",
     },
 
-    onDrumTapDown: function(){
-      console.log('tap down');
+    onRender: function(){
+      this.on('drumTapDown', this.onDrumTapDown, this);
+      this.on('drumTapUp', this.onDrumTapUp, this);
+    },
+
+    drumTapDown: function(){
+      this.trigger("drumTapDown");
     },
     
-    onDrumTapUp: function(){
-      console.log('tap up');
+    drumTapUp: function(){
+      this.trigger("drumTapUp");
     },
 
     onKeyDown: function(e){
       // Spacebar.
       if (e.keyCode == 32){
-        this.onDrumTapDown();
+        this.trigger("drumTapDown");
       }
     },
 
     onKeyUp: function(e){
       // Spacebar.
       if (e.keyCode == 32){
-        this.onDrumTapUp();
+        this.trigger("drumTapUp");
       }
     }
 
