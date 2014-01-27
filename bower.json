@@ -1,0 +1,18 @@
+{
+  "name": "marionette-boilerplate",
+  "version": "0.0.1",
+  "dependencies": {
+    "jquery": "~2",
+    "requirejs": "~2",
+    "requirejs-text": "~2",
+    "lodash": "~1",
+    "backbone": "~1.1.0",
+    "marionette": "~1",
+    "jasmine-ajax": "~1",
+    "handlebars": "~1",
+    "backbone.stickit": "~0"
+  },
+  "resolutions": {
+    "backbone": "~1.1.0"
+  }
+}
