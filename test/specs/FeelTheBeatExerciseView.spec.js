@@ -4,12 +4,26 @@ define(function(require){
 
   var FeelTheBeatExerciseView = require('feelTheBeat/FeelTheBeatExerciseView');
 
+  var AudioContext = window.AudioContext || window.webkitAudioContext;
+  var audioContext = new AudioContext();
+  // play something to start audio context timer.
+  var tmpOsc = audioContext.createOscillator();
+  tmpOsc.frequency.value = 440.0;
+  tmpOsc.connect(audioContext.destination);
+  tmpOsc.start(0);
+  tmpOsc.stop(0);
+
   var generateExerciseView = function(){
     var model = new Backbone.Model({
-      length: 4
+      length: 4,
+      tempo: 60
     });
     var view = new FeelTheBeatExerciseView({
-      model: model
+      model: model,
+      audioContext: audioContext,
+      requestAnimationFrame: function(callback){
+        return window.requestAnimationFrame(callback);
+      }
     });
 
     return view;
@@ -38,7 +52,7 @@ define(function(require){
       var verifyTapPlay = function(){
         var tapPlaySpy = jasmine.createSpy('tap:play');
         view.on('tap:play', tapPlaySpy);
-        view.trigger('drumTapDown');
+        view.trigger('tap:start');
         expect(tapPlaySpy).toHaveBeenCalled();
       };
 
@@ -53,38 +67,38 @@ define(function(require){
         var tapEndSpy = jasmine.createSpy('tapEnd');
 
         beforeEach(function(){
-          view.on('drumTapStart', tapStartSpy);
-          view.on('drumTapEnd', tapEndSpy);
+          view.on('tap:start', tapStartSpy);
+          view.on('tap:end', tapEndSpy);
         });
 
-        it("should trigger 'drumTapStart' for touchstart", function(){
+        it("should trigger 'tap:start' for touchstart", function(){
           view.ui.drum.trigger('touchstart');
           expect(tapStartSpy).toHaveBeenCalled();
         });
 
-        it("should trigger 'drumTapEnd' for touchend", function(){
+        it("should trigger 'tap:end' for touchend", function(){
           view.ui.drum.trigger('touchend');
           expect(tapEndSpy).toHaveBeenCalled();
         });
 
-        it("should trigger 'drapTapStart' for mousedown", function(){
+        it("should trigger 'tap:start' for mousedown", function(){
           view.ui.drum.trigger('mousedown');
           expect(tapStartSpy).toHaveBeenCalled();
         });
 
-        it("should trigger 'drumTapEnd' for mouseup", function(){
+        it("should trigger 'tap:end' for mouseup", function(){
           view.ui.drum.trigger('mouseup');
           expect(tapEndSpy).toHaveBeenCalled();
         });
 
-        it("should trigger 'drumTapStart' for spacebar down", function(){
+        it("should trigger 'tap:start' for spacebar down", function(){
           var e = $.Event("keydown");
           e.keyCode = 32;
           view.$el.trigger(e);
           expect(tapStartSpy).toHaveBeenCalled();
         });
 
-        it("should trigger 'drumTapEnd' for spacebar up", function(){
+        it("should trigger 'tap:end' for spacebar up", function(){
           var e = $.Event("keyup");
           e.keyCode = 32;
           view.$el.trigger(e);
@@ -102,35 +116,30 @@ define(function(require){
 
         });
 
-        it("should 'active' class on drum class on tap down", function(){
-          view.trigger('drumTapDown');
+        it("should 'active' class on drum class on tap start", function(){
+          view.trigger('tap:start');
           expect(view.ui.drum.hasClass('active')).toBe(true);
         });
 
-        it("should remove 'active' class on drum class on tap up", function(){
-          view.trigger('drumTapDown');
-          view.trigger('drumTapUp');
+        it("should remove 'active' class on drum class on tap end", function(){
+          view.trigger('tap:start');
+          view.trigger('tap:end');
           expect(view.ui.drum.hasClass('active')).toBe(false);
         });
 
-        it("should trigger 'beat:start' event when the drum is tapped", function(){
-          var beatStartSpy = jasmine.createSpy('beat:start');
-          view.on('beat:start', beatStartSpy);
-          view.trigger('drumTapDown');
-          expect(beatStartSpy).toHaveBeenCalled();
+        it("should trigger 'beating:start' event when the drum is tapped", function(){
+          var beatingStartSpy = jasmine.createSpy('beating:start');
+          view.on('beating:start', beatingStartSpy);
+          view.trigger('tap:start');
+          expect(beatingStartSpy).toHaveBeenCalled();
         });
 
         it('should trigger a "tap:play" event for the first tap', verifyTapPlay);
-
-        it("should change state to afterFirstTap", function(){
-          view.trigger('drumTapDown');
-          expect(view.model.get('state')).toBe('afterFirstTap');
-        });
       });
 
-      ddescribe('state: afterFirstTap', function(){
+      describe('state: afterFirstTap', function(){
         beforeEach(function(){
-          view.trigger('drumTapDown');
+          view.trigger('tap:start');
         });
 
         describe('ui elements', function(){
@@ -140,7 +149,7 @@ define(function(require){
           });
 
           it('should show number of beats remaining', function(){
-            expect(view.ui.remainingBeats.html()).toContain(view.model.get('remainingBeats'));
+            expect(view.ui.remainingBeats.html()).toContain(view.remainingBeats);
           });
         });
 
@@ -149,22 +158,104 @@ define(function(require){
         it('should trigger a "recording:start" event for the second tap', function(){
           var recordingStartSpy = jasmine.createSpy('recording:start');
           view.on('recording:start', recordingStartSpy);
-          view.trigger('drumTapDown');
+          view.trigger('tap:start');
           expect(recordingStartSpy).toHaveBeenCalled();
         });
 
-        it("should change state to afterSecondTap on tap", function(){
-          view.trigger('drumTapDown');
-          expect(view.model.get('state')).toBe('afterSecondTap');
+      });
+
+      describe('state: afterSecondTap', function(){
+        beforeEach(function(){
+          view.trigger('tap:start');
+          view.trigger('tap:start');
+        });
+
+        it('should trigger a "tap:play" event for the third tap', verifyTapPlay);
+      });
+
+      describe("recording", function(){
+        describe('before recording starts', function(){
+          it("should not record taps before recording has been started", function(){
+            view.trigger('tap:start');
+            expect(view.recordedTaps.length).toBe(0);
+          });
+
+          it("should not record beats before recording has been started", function(){
+            view.trigger('beat:start');
+            expect(view.recordedBeats.length).toBe(0);
+          });
+        });
+
+        describe('when recording starts', function(){
+          beforeEach(function(){
+            view.trigger('tap:start');
+            view.trigger('tap:start');
+          });
+
+          it("should record initial tap", function(){
+            expect(view.recordedTaps.length).toBe(1);
+          });
+
+          it("should record subsequent taps", function(){
+            view.trigger('tap:start');
+            expect(view.recordedTaps.length).toBe(2);
+          });
+
+          iit("should record previous beat as first beat, if it occured w/in .5 beats", function(){
+            var recorded = false;
+            var mostRecentBeat;
+
+            runs(function(){
+              view.on('beat:start', function(beat){
+                console.log('yo');
+                mostRecentBeat = beat;
+                setInterval(function(){
+                  view.trigger('recording:start');
+                  view.trigger('recording:stop');
+                  recorded = true;
+                }, view.secondsPerBeat/4.0);
+              });
+                
+              view.trigger('beating:start');
+            });
+
+            waitsFor(function(){
+              return recorded;
+            }, 2000);
+
+            runs(function(){
+              expect(view.recordedBeats[0]).toBe(mostRecentBeat)
+            });
+          });
+
+          it('should trigger beat events until the number of beats is done', function(){
+            this.fail('NOT IMPLEMENTED');
+          });
+
+          it('should decrement remainingBeats when beat events are triggered', function(){
+            view.trigger('tap:start');
+            view.trigger('tap:start');
+            view.trigger('beat:start');
+            expect(view.remainingBeats).toBe(3);
+          });
+
+        });
+
+        describe('when recording finishes', function(){
+
+          it("should stop record taps when recording is done", function(){
+            expect(view.recordedTaps.length).toBe(1);
+            view.trigger('tap:start');
+            expect(view.recordedTaps.length).toBe(2);
+            view.stopRecording();
+            view.trigger('tap:start');
+            expect(view.recordedTaps.length).toBe(2);
+          });
         });
 
       });
 
-      it('should trigger beat events until the number of beats is done', function(){
-        this.fail('NOT IMPLEMENTED');
-      });
-
-      it('should show results when all the beats are done', function(){
+      it('should trigger results:show when all the beats are done', function(){
         this.fail('NOT IMPLEMENTED');
       });
 
