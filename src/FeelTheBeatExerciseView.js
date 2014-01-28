@@ -26,7 +26,8 @@ define(function(require){
       this.audioContext = options.audioContext;
       this.requestAnimationFrame = options.requestAnimationFrame;
       this.onAnimationFrame = _.bind(this._unbound_onAnimationFrame, this);
-      this.lookAhead = 25.0 // in milliseconds
+      this.lookAhead = 25; // in milliseconds
+      this.scheduleAhead = .1; // in seconds
       this.scheduledBeats = {};
       this.onInitialState();
     },
@@ -75,12 +76,20 @@ define(function(require){
       }
     },
 
+    setSecondsPerBeat: function(){
+      this.secondsPerBeat = 60.0/this.model.get('bpm');
+    },
+
+    updateRemainingBeatsCounter: function(){
+      this.ui.remainingBeats.find('.numBeats').html(this.remainingBeats);
+    },
+
     onTapStart: function(){
       this.tapCounter += 1;
       this.ui.drum.addClass('active');
 
       if (this.tapCounter == 1){
-        this.secondsPerBeat = this.model.get('bpm')/60.0;
+        this.setSecondsPerBeat();
 
         this.trigger('beating:start');
 
@@ -88,8 +97,8 @@ define(function(require){
         this.ui.instructions.html('Try to tap along for ' + this.remainingBeats + ' beats');
 
         // Show number of beats remaining.
-        this.ui.remainingBeats.find('.numBeats').html(this.remainingBeats);
         this.ui.remainingBeats.show();
+        this.updateRemainingBeatsCounter();
       }
       else if (this.tapCounter == 2){
         this.trigger('recording:start');
@@ -106,12 +115,12 @@ define(function(require){
 
     scheduleBeats: function(){
       var currentTime = this.audioContext.currentTime;
-      while (this.nextBeatTime < (currentTime + this.lookAhead) ){
+      while (this.nextBeatTime < (currentTime + this.scheduleAhead) ){
         this.scheduledBeats['t:' + this.nextBeatTime] = this.nextBeatTime;
         this.nextBeatTime += this.secondsPerBeat;
       }
       var _this = this;
-      this.beatSchedulerTimer = window.setTimeout(function(){
+      this.beatSchedulerTimer = setTimeout(function(){
         _this.scheduleBeats();
       }, this.lookAhead );
     },
@@ -137,6 +146,9 @@ define(function(require){
     },
 
     onBeatingStart: function(){
+      if (this.beating){
+        return;
+      }
       this.beating = true;
       this.nextBeatTime = this.audioContext.currentTime;
       this.scheduleBeats();
@@ -157,6 +169,7 @@ define(function(require){
     recordBeat: function(beat){
       this.recordedBeats.push(beat);
       this.remainingBeats -= 1;
+      this.updateRemainingBeatsCounter();
 
       if (this.remainingBeats <= 0){
         this.trigger('recording:stop');

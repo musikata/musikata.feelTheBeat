@@ -16,7 +16,7 @@ define(function(require){
   var generateExerciseView = function(){
     var model = new Backbone.Model({
       length: 4,
-      bpm: 60
+      bpm: 240
     });
     var view = new FeelTheBeatExerciseView({
       model: model,
@@ -188,6 +188,10 @@ define(function(require){
 
         describe('when recording starts', function(){
 
+          beforeEach(function(){
+            view.setSecondsPerBeat();
+          });
+
           it("should record initial tap", function(){
             view.trigger('tap:start');
             view.trigger('tap:start');
@@ -207,7 +211,6 @@ define(function(require){
             var mostRecentBeat;
 
             runs(function(){
-              view.trigger('tap:start');
               view.once('beat:start', function(beat){
                 view.off('beat:start');
                 view.trigger('beating:stop');
@@ -237,7 +240,6 @@ define(function(require){
             var mostRecentBeat;
 
             runs(function(){
-              view.trigger('tap:start');
               view.once('beat:start', function(beat){
                 view.trigger('beating:stop');
                 mostRecentBeat = beat;
@@ -263,27 +265,68 @@ define(function(require){
 
 
           it('should trigger beat events until the number of beats is done', function(){
-            this.fail('NOT IMPLEMENTED');
+            var recorded = false;
+            var expectedLength = view.model.get('length');
+            var expectedDuration = expectedLength * view.secondsPerBeat * 1000;
+
+            runs(function(){
+              view.once('recording:stop', function(){
+                recorded = true;
+              });
+              view.trigger('recording:start');
+              view.trigger('beating:start');
+            });
+
+            waitsFor(function(){
+              return recorded;
+            }, expectedDuration + 1000);
+
+            runs(function(){
+              expect(view.recordedBeats.length).toBe(expectedLength);
+            });
           });
 
           it('should decrement remainingBeats when beat events are triggered', function(){
-            view.trigger('tap:start');
-            view.trigger('tap:start');
-            view.trigger('beat:start');
-            expect(view.remainingBeats).toBe(3);
+            var recorded = false;
+            var expectedLength = view.model.get('length');
+            var expectedDuration = expectedLength * view.secondsPerBeat * 1000;
+            var $beatCounter = view.ui.remainingBeats.find('.numBeats');
+
+            runs(function(){
+              view.once('recording:stop', function(){
+                recorded = true;
+              });
+
+              view.on('beat:start', function(beat){
+                if (view.recording){
+                  expect($beatCounter.html()).toContain(view.remainingBeats);
+                }
+              });
+
+              view.trigger('recording:start');
+              view.trigger('beating:start');
+            });
+
+            waitsFor(function(){
+              return recorded;
+            }, expectedDuration + 1000);
+
+            runs(function(){
+              expect(view.recordedBeats.length).toBe(expectedLength);
+            });
           });
 
         });
 
         describe('when recording finishes', function(){
 
-          it("should stop record taps when recording is done", function(){
+          it("should stop recording taps", function(){
+            view.trigger('tap:start');
+            view.trigger('tap:start');
             expect(view.recordedTaps.length).toBe(1);
+            view.trigger('recording:stop');
             view.trigger('tap:start');
-            expect(view.recordedTaps.length).toBe(2);
-            view.stopRecording();
-            view.trigger('tap:start');
-            expect(view.recordedTaps.length).toBe(2);
+            expect(view.recordedTaps.length).toBe(1);
           });
         });
 
