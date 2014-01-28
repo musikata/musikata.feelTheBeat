@@ -10,7 +10,8 @@ define(function(require){
     ui: {
       instructions: '.instructions',
       drum: '.drum',
-      remainingBeats: '.remainingBeats'
+      remainingBeats: '.remainingBeats',
+      results: '.results'
     },
 
     events: {
@@ -99,6 +100,9 @@ define(function(require){
         // Show number of beats remaining.
         this.ui.remainingBeats.show();
         this.updateRemainingBeatsCounter();
+
+        // Show results when recording finishes.
+        this.once('recording:stop', this.showResults, this);
       }
       else if (this.tapCounter == 2){
         this.trigger('recording:start');
@@ -197,6 +201,10 @@ define(function(require){
         this.requestAnimationFrame(this.onAnimationFrame);
       }
     },
+
+    showResults: function(){
+      this.ui.results.show();
+    }
 
   });
 

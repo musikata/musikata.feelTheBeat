@@ -40,6 +40,7 @@ define(function(require){
       beforeEach(function(){
         view = generateExerciseView();
         view.render();
+        $('body').append(view.el);
       });
 
       afterEach(function(){
@@ -320,20 +321,22 @@ define(function(require){
 
         describe('when recording finishes', function(){
 
-          it("should stop recording taps", function(){
+          beforeEach(function(){
             view.trigger('tap:start');
             view.trigger('tap:start');
-            expect(view.recordedTaps.length).toBe(1);
             view.trigger('recording:stop');
+          });
+
+          it("should stop recording taps", function(){
             view.trigger('tap:start');
             expect(view.recordedTaps.length).toBe(1);
           });
+
+          iit('should show results', function(){
+            expect(view.ui.results.is(':visible')).toBe(true);
+          });
+
         });
-
-      });
-
-      it('should trigger results:show when all the beats are done', function(){
-        this.fail('NOT IMPLEMENTED');
       });
 
     });
@@ -348,6 +351,10 @@ define(function(require){
       });
 
       it("should mark where the user's beat was far off", function(){
+        this.fail('NOT IMPlEMENTED');
+      });
+
+      it("should let user play back the recording", function(){
         this.fail('NOT IMPlEMENTED');
       });
     });
