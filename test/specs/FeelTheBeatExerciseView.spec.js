@@ -11,12 +11,12 @@ define(function(require){
   tmpOsc.frequency.value = 440.0;
   tmpOsc.connect(audioContext.destination);
   tmpOsc.start(0);
-  tmpOsc.stop(0);
+  tmpOsc.stop(.00001);
 
   var generateExerciseView = function(){
     var model = new Backbone.Model({
       length: 4,
-      tempo: 60
+      bpm: 60
     });
     var view = new FeelTheBeatExerciseView({
       model: model,
@@ -187,33 +187,37 @@ define(function(require){
         });
 
         describe('when recording starts', function(){
-          beforeEach(function(){
-            view.trigger('tap:start');
-            view.trigger('tap:start');
-          });
 
           it("should record initial tap", function(){
+            view.trigger('tap:start');
+            view.trigger('tap:start');
             expect(view.recordedTaps.length).toBe(1);
           });
 
           it("should record subsequent taps", function(){
             view.trigger('tap:start');
+            view.trigger('tap:start');
+            view.trigger('tap:start');
             expect(view.recordedTaps.length).toBe(2);
           });
 
-          iit("should record previous beat as first beat, if it occured w/in .5 beats", function(){
+          it("should record previous beat as first beat, if it occured w/in .5 beats", function(){
+
             var recorded = false;
             var mostRecentBeat;
 
             runs(function(){
-              view.on('beat:start', function(beat){
-                console.log('yo');
+              view.trigger('tap:start');
+              view.once('beat:start', function(beat){
+                view.off('beat:start');
+                view.trigger('beating:stop');
                 mostRecentBeat = beat;
-                setInterval(function(){
+                setTimeout(function(){
                   view.trigger('recording:start');
                   view.trigger('recording:stop');
                   recorded = true;
-                }, view.secondsPerBeat/4.0);
+                }, view.secondsPerBeat * .25 * 1000);
+
               });
                 
               view.trigger('beating:start');
@@ -227,6 +231,36 @@ define(function(require){
               expect(view.recordedBeats[0]).toBe(mostRecentBeat)
             });
           });
+
+          it("should not record previous beat as first beat, if it did not occur w/in .5 beats", function(){
+            var recorded = false;
+            var mostRecentBeat;
+
+            runs(function(){
+              view.trigger('tap:start');
+              view.once('beat:start', function(beat){
+                view.trigger('beating:stop');
+                mostRecentBeat = beat;
+                setTimeout(function(){
+                  view.trigger('recording:start');
+                  view.trigger('recording:stop');
+                  recorded = true;
+                }, view.secondsPerBeat * .75 * 1000);
+
+              });
+                
+              view.trigger('beating:start');
+            });
+
+            waitsFor(function(){
+              return recorded;
+            }, 2000);
+
+            runs(function(){
+              expect(view.recordedBeats.length).toBe(0);
+            });
+          });
+
 
           it('should trigger beat events until the number of beats is done', function(){
             this.fail('NOT IMPLEMENTED');

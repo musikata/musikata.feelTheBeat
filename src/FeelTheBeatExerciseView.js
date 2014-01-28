@@ -38,6 +38,11 @@ define(function(require){
       this.on('beating:stop', this.onBeatingStop, this);
       this.on('recording:start', this.onRecordingStart, this);
       this.on('recording:stop', this.onRecordingStop, this);
+
+      // Keep track of most recent beat.
+      this.on('beat:start', function(beat){
+        this.mostRecentBeat = beat;
+      }, this);
     },
 
     onInitialState: function(){
@@ -75,7 +80,7 @@ define(function(require){
       this.ui.drum.addClass('active');
 
       if (this.tapCounter == 1){
-        this.secondsPerBeat = 1.0/this.model.get('tempo');
+        this.secondsPerBeat = this.model.get('bpm')/60.0;
 
         this.trigger('beating:start');
 
@@ -111,17 +116,21 @@ define(function(require){
       }, this.lookAhead );
     },
 
-    onStartRecording: function(){
+    onRecordingStart: function(){
       this.on('tap:start', this.recordTap, this);
       this.on('beat:start', this.recordBeat, this);
 
-      // Record initial tap and closest beat.
+      // Record initial tap.
       this.recordTap();
+
+      // Record most recent beat, if w/in .5 beats.
+      if ((this.audioContext.currentTime - this.mostRecentBeat) < (this.secondsPerBeat * .5)){
+        this.recordBeat(this.mostRecentBeat);
+      }
 
     },
 
-    onStopRecording: function(){
-      this.trigger('recording:stop');
+    onRecordingStop: function(){
       this.recording = false;
       this.off('tap:start', this.recordTap, this);
       this.off('beat:start', this.recordBeat, this);
@@ -145,10 +154,8 @@ define(function(require){
       this.recordedTaps.push(tapTime);
     },
 
-    recordBeat: function(){
-      // @TODO: get beat time.
-      var beatTime = 'forg';
-      this.recordedBeats.push(beatTime);
+    recordBeat: function(beat){
+      this.recordedBeats.push(beat);
       this.remainingBeats -= 1;
 
       if (this.remainingBeats <= 0){
