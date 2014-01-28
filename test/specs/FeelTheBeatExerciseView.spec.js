@@ -1,8 +1,10 @@
 define(function(require){
   var $ = require('jquery');
+  var _ = require('underscore');
   var Backbone = require('backbone');
 
   var FeelTheBeatExerciseView = require('feelTheBeat/FeelTheBeatExerciseView');
+  var ResultsView = require('feelTheBeat/ResultsView');
 
   var AudioContext = window.AudioContext || window.webkitAudioContext;
   var audioContext = new AudioContext();
@@ -13,11 +15,13 @@ define(function(require){
   tmpOsc.start(0);
   tmpOsc.stop(.00001);
 
-  var generateExerciseView = function(){
-    var model = new Backbone.Model({
+  var generateExerciseView = function(opts){
+    var model = new Backbone.Model(_.extend({
       length: 4,
-      bpm: 240
-    });
+      bpm: 240,
+      threshold: .75
+    }, opts));
+
     var view = new FeelTheBeatExerciseView({
       model: model,
       audioContext: audioContext,
@@ -190,7 +194,7 @@ define(function(require){
         describe('when recording starts', function(){
 
           beforeEach(function(){
-            view.setSecondsPerBeat();
+            view.updateSecondsPerBeat();
           });
 
           it("should record initial tap", function(){
@@ -321,7 +325,10 @@ define(function(require){
 
         describe('when recording finishes', function(){
 
+          var submissionSpy;
           beforeEach(function(){
+            submissionSpy = jasmine.createSpy('submissionSpy');
+            view.on('submission:start', submissionSpy);
             view.trigger('tap:start');
             view.trigger('tap:start');
             view.trigger('recording:stop');
@@ -338,22 +345,135 @@ define(function(require){
           });
 
           it('should show results', function(){
-            expect(view.ui.results.is(':visible')).toBe(true);
+            expect(view.body.currentView instanceof ResultsView).toBe(true);
+          });
+
+          it('should trigger submission', function(){
+            expect(submissionSpy).toHaveBeenCalled();
           });
 
         });
       });
 
-    });
+      describe("submission evaluation", function(){
+        it("should mark taps and beats as 'pass' when they match w/in threshold", function(){
+          var submission = {
+            beats: [0, 1],
+            taps: [.1, .8],
+            threshold: .2,
+            maxFailedBeats: 1
+          };
 
-    describe("grading", function(){
-      it("should pass the exercise if enough taps were within the threshold", function(){
-        this.fail('NOT IMPlEMENTED');
+          var expectedEvaluation = {
+            beats: [
+              {beat: 0, tap: .1, result: 'pass'},
+              {beat: 1, tap: .8, result: 'fail'}
+            ],
+            taps: [
+              {beat: 0, tap: .1, result: 'pass'},
+              {beat: 1, tap: .8, result: 'fail'}
+            ],
+            result: 'pass'
+          };
+          var actualEvaluation = view.evaluateSubmission(submission);
+          expect(expectedEvaluation).toEqual(actualEvaluation);
+        });
+
+        it("should mark beats w/out corresponding taps as 'fail'", function(){
+          var submission = {
+            beats: [0, 1],
+            taps: [.1],
+            threshold: .2,
+            maxFailedBeats: 1
+          };
+
+          var expectedEvaluation = {
+            beats: [
+              {beat: 0, tap: .1, result: 'pass'},
+              {beat: 1, tap: null, result: 'fail'}
+            ],
+            taps: [
+              {beat: 0, tap: .1, result: 'pass'},
+            ],
+            result: 'pass'
+          };
+          var actualEvaluation = view.evaluateSubmission(submission);
+          expect(expectedEvaluation).toEqual(actualEvaluation);
+        });
+
+        it("should mark taps w/out corresponding beats 'fail'", function(){
+          var submission = {
+            beats: [0],
+            taps: [.1, .8],
+            threshold: .2,
+            maxFailedBeats: 1
+          };
+
+          var expectedEvaluation = {
+            beats: [
+              {beat: 0, tap: .1, result: 'pass'},
+            ],
+            taps: [
+              {beat: 0, tap: .1, result: 'pass'},
+              {beat: null, tap: .8, result: 'fail'},
+            ],
+            result: 'pass'
+          };
+          var actualEvaluation = view.evaluateSubmission(submission);
+          expect(expectedEvaluation).toEqual(actualEvaluation);
+        });
+
+        it("should mark overall result as 'pass' if did not exceed maxFailedBeats", function(){
+          var submission = {
+            beats: [0, 1],
+            taps: [.1, .8],
+            threshold: .2,
+            maxFailedBeats: 1
+          };
+          var actualEvaluation = view.evaluateSubmission(submission);
+          expect(actualEvaluation.result).toEqual('pass');
+        });
+
+        it("should mark overall result as 'fail' if exceeded maxFailedBeats", function(){
+          var submission = {
+            beats: [0, 1],
+            taps: [.1, .8],
+            threshold: .2,
+            maxFailedBeats: 0
+          };
+          var actualEvaluation = view.evaluateSubmission(submission);
+          expect(actualEvaluation.result).toEqual('fail');
+        });
+
+        // We don't care about extra taps, because they shouldn't affect the overall result.
+        xit("should check for extra failed taps", function(){
+          this.fail('NOT IMPLEMENTED');
+        });
       });
 
-      it("should fail the exercise if too many taps were outside the threshold", function(){
-        this.fail('NOT IMPLEMENTED');
+      describe("submission result", function(){
+        beforeEach(function(){
+          view.updateSecondsPerBeat();
+        });
+
+        it("should correctly evaluate submission", function(){
+          // Taps are matched up in order to beats.
+          // If a tap falls outside the threshold window for its corresponding beat, it is
+          // marked as 'bad'.
+          this.fail('NOT IMPLEMENTED');
+        });
+
+        it("should pass the exercise if there were not too many bad taps", function(){
+          view.recordedTaps = [0, .5];
+          expect(view.model.get('result')).toBe('pass');
+        });
+
+        it("should fail the exercise if there were too many bad taps", function(){
+          expect(view.model.get('result')).toBe('fail');
+          this.fail('NOT IMPLEMENTED');
+        });
       });
+
     });
 
     describe("loading", function(){
