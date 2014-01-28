@@ -327,36 +327,23 @@ define(function(require){
             view.trigger('recording:stop');
           });
 
-          it("should stop recording taps", function(){
-            view.trigger('tap:start');
-            expect(view.recordedTaps.length).toBe(1);
+          it("should still record taps for .5 beats", function(){
+            this.fail('NOT IMPLEMENTED');
           });
 
-          iit('should show results', function(){
+          it("should stop recording taps after .5 beats", function(){
+            view.trigger('tap:start');
+            expect(view.recordedTaps.length).toBe(1);
+            this.fail('NOT IMPLEMENTED');
+          });
+
+          it('should show results', function(){
             expect(view.ui.results.is(':visible')).toBe(true);
           });
 
         });
       });
 
-    });
-
-    describe('results', function(){
-      it('should show lines for the true beat', function(){
-        this.fail('NOT IMPLEMENTED');
-      });
-
-      it("should show lines for the user's beat", function(){
-        this.fail('NOT IMPlEMENTED');
-      });
-
-      it("should mark where the user's beat was far off", function(){
-        this.fail('NOT IMPlEMENTED');
-      });
-
-      it("should let user play back the recording", function(){
-        this.fail('NOT IMPlEMENTED');
-      });
     });
 
     describe("grading", function(){

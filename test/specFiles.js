@@ -3,7 +3,8 @@
 // confusing Karma with missing AMD dependencies.
 
 var specFiles = [
-  'FeelTheBeatExerciseView.spec.js'
+  'FeelTheBeatExerciseView.spec.js',
+  'ResultsView.spec.js'
 ];
 
 // Prefix specs with specsDir.
