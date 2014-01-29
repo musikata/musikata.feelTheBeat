@@ -12,6 +12,7 @@ define(function(require){
     ui: {
       instructions: '.instructions',
       drum: '.drum',
+      loadingMsg: '.drum_container .msg.loading',
       remainingBeats: '.remainingBeats',
       results: '.results'
     },
@@ -19,6 +20,12 @@ define(function(require){
     regions: {
       body: '.body'
     },
+
+    // Sounds to be loaded via sound manager.
+    sounds: [
+      'FeelTheBeat:beat',
+      'FeelTheBeat:tap'
+    ],
 
     events: {
       "touchstart @ui.drum": "drumTapStart",
@@ -30,6 +37,7 @@ define(function(require){
     },
 
     initialize: function(options){
+      this.soundManager = options.soundManager;
       this.audioContext = options.audioContext;
       this.requestAnimationFrame = options.requestAnimationFrame;
       this.onAnimationFrame = _.bind(this._unbound_onAnimationFrame, this);
@@ -37,11 +45,16 @@ define(function(require){
       this.scheduleAhead = .1; // in seconds
       this.scheduledBeats = {};
       this.onInitialState();
+
+      // Get promises for sound resources.
+      var soundPromises = [];
+      _.each(this.sounds, function(soundId){
+        soundPromises.push(this.soundManager.getBufferPromise(soundId));
+      }, this);
+      this.soundPromise = $.when.apply($, soundPromises);
     },
 
     onRender: function(){
-      this.on('tap:start', this.onTapStart, this);
-      this.on('tap:end', this.onTapEnd, this);
       this.on('beating:start', this.onBeatingStart, this);
       this.on('beating:stop', this.onBeatingStop, this);
       this.on('recording:start', this.onRecordingStart, this);
@@ -51,6 +64,14 @@ define(function(require){
       this.on('beat:start', function(beat){
         this.mostRecentBeat = beat;
       }, this);
+
+      // Enable drum and listen for taps when sound resources have been loaded.
+      this.soundPromise.done(_.bind(function(){
+        this.ui.drum.removeClass('disabled');
+        this.ui.loadingMsg.hide();
+        this.on('tap:start', this.onTapStart, this);
+        this.on('tap:end', this.onTapEnd, this);
+      }, this));
     },
 
     onInitialState: function(){

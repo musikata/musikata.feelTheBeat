@@ -15,7 +15,44 @@ define(function(require){
   tmpOsc.start(0);
   tmpOsc.stop(.00001);
 
-  var generateExerciseView = function(opts){
+  /*
+   * Utility methods.
+   */
+
+  // @TODO: move this to someplace external.
+  var generateSoundManager = function(opts){
+
+    var SoundManager = function(){
+      this.context = audioContext;
+      this.loadTime = opts.loadTime || 0;
+    };
+    _.extend(SoundManager.prototype, {
+      getBufferPromise: function(key){
+        // Fake loading by creating noise buffer.
+        var buffer = this.context.createBuffer(1, 44100, 44100);
+        var data = buffer.getChannelData(0);
+        for (i = 0; i < data.length; i++) {
+          data[i] = 0;
+        }
+        var deferred = new $.Deferred();
+        setTimeout(function(){
+          deferred.resolve(buffer);
+        }, this.loadTime);
+        return deferred.promise();
+      }
+    });
+
+    return new SoundManager();
+  };
+
+  var generateExerciseView = function(overrides){
+
+    var opts = _.extend({
+      soundManager: {
+        loadTime: 0
+      }
+    }, overrides);
+
     var model = new Backbone.Model(_.extend({
       length: 4,
       bpm: 240,
@@ -27,7 +64,8 @@ define(function(require){
       audioContext: audioContext,
       requestAnimationFrame: function(callback){
         return window.requestAnimationFrame(callback);
-      }
+      },
+      soundManager: generateSoundManager(opts.soundManager)
     });
 
     return view;
@@ -487,8 +525,38 @@ define(function(require){
     });
 
     describe("loading", function(){
-      it("shouldn't start until the sound resources are loaded", function(){
-        this.fail('NOT IMPLEMENTED');
+      var view;
+      afterEach(function(){
+        view.remove();
+      });
+
+      it("should show loading message over disabled drum if sounds have not been resolved", function(){
+        view = generateExerciseView();
+        view.render();
+        $('body').append(view.el);
+
+        expect(view.ui.drum.hasClass('disabled')).toBe(true);
+        expect(view.ui.loadingMsg.is(':visible')).toBe(true);
+      });
+
+      it("should remove loading message and enable drum when sounds are resolved", function(){
+        var loadTime = 200;
+        runs(function(){
+          view = generateExerciseView({
+            soundManager: {
+              loadTime: loadTime
+            }
+          });
+          view.render();
+          $('body').append(view.el);
+        });
+
+        waits(loadTime + 100);
+
+        runs(function(){
+          expect(view.ui.drum.hasClass('disabled')).toBe(false);
+          expect(view.ui.loadingMsg.is(':visible')).toBe(false);
+        });
       });
     });
   });
