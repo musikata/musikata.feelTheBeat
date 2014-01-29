@@ -151,8 +151,12 @@ define(function(require){
 
     onRecordingStop: function(){
       this.recording = false;
-      this.off('tap:start', this.recordTap, this);
       this.off('beat:start', this.recordBeat, this);
+
+      // Listen for trailing taps (up to about .5 beats later)
+      setTimeout(_.bind(function(){
+        this.off('tap:start', this.recordTap, this);
+      }, this), this.secondsPerBeat * .5 * 1000);
     },
 
     onBeatingStart: function(){
@@ -215,7 +219,9 @@ define(function(require){
         taps: this.recordedTaps,
         threshold: this.model.get('threshold') * this.secondsPerBeat
       };
-      this.evaluateSubmission(submission);
+      var evaluatedSubmission = this.evaluateSubmission(submission);
+      this.showResults(evaluatedSubmission);
+      this.trigger('submission:end');
     },
 
     evaluateSubmission: function(submission){

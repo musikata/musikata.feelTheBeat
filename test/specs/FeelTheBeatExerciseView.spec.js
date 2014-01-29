@@ -335,27 +335,41 @@ define(function(require){
           });
 
           it("should still record taps for .5 beats", function(){
-            this.fail('NOT IMPLEMENTED');
+            var done = false;
+            runs(function(){
+              setTimeout(function(){
+                view.trigger('tap:start');
+                done = true;
+              }, view.secondsPerBeat * .1 * 1000);
+            });
+            waitsFor(function(){return done;});
+            runs(function(){
+              expect(view.recordedTaps.length).toBe(2);
+            });
           });
 
           it("should stop recording taps after .5 beats", function(){
-            view.trigger('tap:start');
-            expect(view.recordedTaps.length).toBe(1);
-            this.fail('NOT IMPLEMENTED');
+            var done = false;
+            runs(function(){
+              setTimeout(function(){
+                view.trigger('tap:start');
+                done = true;
+              }, view.secondsPerBeat * .75 * 1000);
+            });
+            waitsFor(function(){return done;});
+            runs(function(){
+              expect(view.recordedTaps.length).toBe(1);
+            });
           });
 
-          it('should show results', function(){
-            expect(view.body.currentView instanceof ResultsView).toBe(true);
-          });
-
-          it('should trigger submission', function(){
+          it('should submit', function(){
             expect(submissionSpy).toHaveBeenCalled();
           });
 
         });
       });
 
-      describe("submission evaluation", function(){
+      describe("evaluation", function(){
         it("should mark taps and beats as 'pass' when they match w/in threshold", function(){
           var submission = {
             beats: [0, 1],
@@ -451,26 +465,22 @@ define(function(require){
         });
       });
 
-      describe("submission result", function(){
+      describe("after submission", function(){
+
+        var submissionEndSpy;
         beforeEach(function(){
-          view.updateSecondsPerBeat();
+          submissionEndSpy = jasmine.createSpy('submission:end');
+          view.on('submission:end', submissionEndSpy);
+          view.submit();
         });
 
-        it("should correctly evaluate submission", function(){
-          // Taps are matched up in order to beats.
-          // If a tap falls outside the threshold window for its corresponding beat, it is
-          // marked as 'bad'.
-          this.fail('NOT IMPLEMENTED');
+        it('should show results', function(){
+          var isShowingResults = (view.body.currentView instanceof ResultsView);
+          expect(isShowingResults).toBe(true);
         });
 
-        it("should pass the exercise if there were not too many bad taps", function(){
-          view.recordedTaps = [0, .5];
-          expect(view.model.get('result')).toBe('pass');
-        });
-
-        it("should fail the exercise if there were too many bad taps", function(){
-          expect(view.model.get('result')).toBe('fail');
-          this.fail('NOT IMPLEMENTED');
+        it('should trigger submission completed', function(){
+          expect(submissionEndSpy).toHaveBeenCalled();
         });
       });
 
