@@ -35,9 +35,14 @@ define(function(require){
           data[i] = 0;
         }
         var deferred = new $.Deferred();
-        setTimeout(function(){
+        if (this.loadTime){
+          setTimeout(function(){
+            deferred.resolve(buffer);
+          }, this.loadTime);
+        }
+        else{
           deferred.resolve(buffer);
-        }, this.loadTime);
+        }
         return deferred.promise();
       }
     });
@@ -531,7 +536,11 @@ define(function(require){
       });
 
       it("should show loading message over disabled drum if sounds have not been resolved", function(){
-        view = generateExerciseView();
+        view = generateExerciseView({
+          soundManager: {
+            loadTime: 1 * 1000
+          }
+        });
         view.render();
         $('body').append(view.el);
 
