@@ -40,8 +40,6 @@ define(function(require){
       this.audioManager = options.audioManager;
       this.requestAnimationFrame = options.requestAnimationFrame;
       this.onAnimationFrame = _.bind(this._unbound_onAnimationFrame, this);
-      this.lookAhead = 25; // in milliseconds
-      this.scheduleAhead = .1; // in seconds
       this.scheduledBeats = {};
       this.recording = false;
       this.remainingBeats = this.model.get('length');
@@ -144,14 +142,15 @@ define(function(require){
 
     scheduleBeats: function(){
       var currentTime = this.audioManager.getCurrentTime();
-      while (this.nextBeatTime < (currentTime + this.scheduleAhead) ){
+      while (this.nextBeatTime < (currentTime + this.secondsPerBeat * .5) ){
+        console.log(this.nextBeatTime);
         this.scheduledBeats['t:' + this.nextBeatTime] = this.nextBeatTime;
         this.nextBeatTime += this.secondsPerBeat;
       }
       var _this = this;
       this.beatSchedulerTimer = setTimeout(function(){
         _this.scheduleBeats();
-      }, this.lookAhead );
+      }, this.secondsPerBeat * .5);
     },
 
     onRecordingStart: function(){
@@ -190,7 +189,7 @@ define(function(require){
 
     onBeatingStop: function(){
       this.beating = false;
-      window.clearTimeout(this.beatScheduledTimer);
+      window.clearTimeout(this.beatSchedulerTimer);
     },
 
     recordTap: function(){
