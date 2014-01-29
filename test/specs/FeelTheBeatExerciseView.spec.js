@@ -20,14 +20,17 @@ define(function(require){
    */
 
   // @TODO: move this to someplace external.
-  var generateSoundManager = function(opts){
+  var generateAudioManager = function(opts){
 
-    var SoundManager = function(){
+    var AudioManager = function(){
       this.context = audioContext;
       this.loadTime = opts.loadTime || 0;
     };
-    _.extend(SoundManager.prototype, {
-      getBufferPromise: function(key){
+    _.extend(AudioManager.prototype, {
+      getCurrentTime: function(){
+        return this.context.currentTime;
+      },
+      getPromise: function(resource){
         // Fake loading by creating noise buffer.
         var buffer = this.context.createBuffer(1, 44100, 44100);
         var data = buffer.getChannelData(0);
@@ -47,13 +50,13 @@ define(function(require){
       }
     });
 
-    return new SoundManager();
+    return new AudioManager();
   };
 
   var generateExerciseView = function(overrides){
 
     var opts = _.extend({
-      soundManager: {
+      audioManager: {
         loadTime: 0
       }
     }, overrides);
@@ -66,11 +69,10 @@ define(function(require){
 
     var view = new FeelTheBeatExerciseView({
       model: model,
-      audioContext: audioContext,
       requestAnimationFrame: function(callback){
         return window.requestAnimationFrame(callback);
       },
-      soundManager: generateSoundManager(opts.soundManager)
+      audioManager: generateAudioManager(opts.audioManager)
     });
 
     return view;
@@ -537,7 +539,7 @@ define(function(require){
 
       it("should show loading message over disabled drum if sounds have not been resolved", function(){
         view = generateExerciseView({
-          soundManager: {
+          audioManager: {
             loadTime: 1 * 1000
           }
         });
@@ -552,7 +554,7 @@ define(function(require){
         var loadTime = 200;
         runs(function(){
           view = generateExerciseView({
-            soundManager: {
+            audioManager: {
               loadTime: loadTime
             }
           });

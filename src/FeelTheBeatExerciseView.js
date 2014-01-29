@@ -21,8 +21,8 @@ define(function(require){
       body: '.body'
     },
 
-    // Sounds to be loaded via sound manager.
-    sounds: [
+    // Resources to be loaded via an audio manager.
+    audioResources: [
       'FeelTheBeat:beat',
       'FeelTheBeat:tap'
     ],
@@ -37,21 +37,24 @@ define(function(require){
     },
 
     initialize: function(options){
-      this.soundManager = options.soundManager;
-      this.audioContext = options.audioContext;
+      this.audioManager = options.audioManager;
       this.requestAnimationFrame = options.requestAnimationFrame;
       this.onAnimationFrame = _.bind(this._unbound_onAnimationFrame, this);
       this.lookAhead = 25; // in milliseconds
       this.scheduleAhead = .1; // in seconds
       this.scheduledBeats = {};
-      this.onInitialState();
+      this.recording = false;
+      this.remainingBeats = this.model.get('length');
+      this.tapCounter = 0;
+      this.recordedTaps = [];
+      this.recordedBeats = [];
 
-      // Get promises for sound resources.
-      var soundPromises = [];
-      _.each(this.sounds, function(soundId){
-        soundPromises.push(this.soundManager.getBufferPromise(soundId));
+      // Get promises for audio resources.
+      var audioPromises = [];
+      _.each(this.audioResources, function(resource){
+        audioPromises.push(this.audioManager.getPromise(resource));
       }, this);
-      this.soundPromise = $.when.apply($, soundPromises);
+      this.audioPromise = $.when.apply($, audioPromises);
     },
 
     onRender: function(){
@@ -65,21 +68,13 @@ define(function(require){
         this.mostRecentBeat = beat;
       }, this);
 
-      // Enable drum and listen for taps when sound resources have been loaded.
-      this.soundPromise.done(_.bind(function(){
+      // Enable drum and listen for taps when audio resources have been loaded.
+      this.audioPromise.done(_.bind(function(){
         this.ui.drum.removeClass('disabled');
         this.ui.loadingMsg.hide();
         this.on('tap:start', this.onTapStart, this);
         this.on('tap:end', this.onTapEnd, this);
       }, this));
-    },
-
-    onInitialState: function(){
-      this.recording = false;
-      this.remainingBeats = this.model.get('length');
-      this.tapCounter = 0;
-      this.recordedTaps = [];
-      this.recordedBeats = [];
     },
 
     drumTapStart: function(){
@@ -105,6 +100,9 @@ define(function(require){
     },
 
     updateSecondsPerBeat: function(){
+      if (! this.model.get('bpm')){
+        throw new Error('bpm was note set');
+      }
       this.secondsPerBeat = 60.0/this.model.get('bpm');
     },
 
@@ -145,7 +143,7 @@ define(function(require){
     },
 
     scheduleBeats: function(){
-      var currentTime = this.audioContext.currentTime;
+      var currentTime = this.audioManager.getCurrentTime();
       while (this.nextBeatTime < (currentTime + this.scheduleAhead) ){
         this.scheduledBeats['t:' + this.nextBeatTime] = this.nextBeatTime;
         this.nextBeatTime += this.secondsPerBeat;
@@ -164,7 +162,7 @@ define(function(require){
       this.recordTap();
 
       // Record most recent beat, if w/in .5 beats.
-      if ((this.audioContext.currentTime - this.mostRecentBeat) < (this.secondsPerBeat * .5)){
+      if ((this.audioManager.getCurrentTime() - this.mostRecentBeat) < (this.secondsPerBeat * .5)){
         this.recordBeat(this.mostRecentBeat);
       }
 
@@ -185,7 +183,7 @@ define(function(require){
         return;
       }
       this.beating = true;
-      this.nextBeatTime = this.audioContext.currentTime;
+      this.nextBeatTime = this.audioManager.getCurrentTime();
       this.scheduleBeats();
       this.onAnimationFrame();
     },
@@ -215,7 +213,7 @@ define(function(require){
     // @TODO: factor this out into a web audio manager?
     // This will be bound in the initialize method.
     _unbound_onAnimationFrame: function(){
-      var currentTime = this.audioContext.currentTime;
+      var currentTime = this.audioManager.getCurrentTime();
 
       // Process scheduled beats.
       for (var beatId in this.scheduledBeats) {
