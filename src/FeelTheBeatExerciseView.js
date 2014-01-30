@@ -58,6 +58,7 @@ define(function(require){
       this.on('beating:stop', this.onBeatingStop, this);
       this.on('recording:start', this.onRecordingStart, this);
       this.on('recording:stop', this.onRecordingStop, this);
+      this.on("tap:play", this.onTapPlay, this);
 
       // Keep track of most recent beat.
       this.on('beat:start', function(beat){
@@ -144,8 +145,8 @@ define(function(require){
       while (this.nextBeatTime < (currentTime + this.secondsPerBeat * .5) ){
         var beatTime = this.nextBeatTime;
         this.audioManager.scheduleEvent({
-          resourceId: "FeelTheBeat:beat",
-          action: "on",
+          action: "sample:start",
+          sample: "FeelTheBeat:beat",
           time: beatTime,
           callback: function(){
             _this.trigger('beat:start', beatTime);
@@ -280,6 +281,14 @@ define(function(require){
       this.body.show(new ResultsView({
         model: new Backbone.Model(evaluatedSubmission)
       }));
+    },
+
+    onTapPlay: function(){
+      this.audioManager.scheduleEvent({
+        action: "sample:start",
+        sample: "FeelTheBeat:tap",
+        time: 0,
+      });
     }
 
   });
