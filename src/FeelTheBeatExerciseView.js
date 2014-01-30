@@ -32,8 +32,6 @@ define(function(require){
       "mousedown @ui.drum": "drumTapStart",
       "touchend @ui.drum": "drumTapEnd",
       "mouseup @ui.drum": "drumTapEnd",
-      "keydown": "onKeyDown",
-      "keyup": "onKeyUp",
     },
 
     initialize: function(options){
@@ -59,6 +57,10 @@ define(function(require){
       this.on('recording:start', this.onRecordingStart, this);
       this.on('recording:stop', this.onRecordingStop, this);
       this.on("tap:play", this.onTapPlay, this);
+
+      // Listen for keypresses.
+      $('body').on('keydown', _.bind(this.onKeyDown, this));
+      $('body').on('keyup', _.bind(this.onKeyUp, this));
 
       // Keep track of most recent beat.
       this.on('beat:start', function(beat){
