@@ -38,8 +38,6 @@ define(function(require){
 
     initialize: function(options){
       this.audioManager = options.audioManager;
-      this.requestAnimationFrame = options.requestAnimationFrame;
-      this.onAnimationFrame = _.bind(this._unbound_onAnimationFrame, this);
       this.scheduledBeats = {};
       this.recording = false;
       this.remainingBeats = this.model.get('length');
@@ -141,13 +139,20 @@ define(function(require){
     },
 
     scheduleBeats: function(){
+      var _this = this;
       var currentTime = this.audioManager.getCurrentTime();
       while (this.nextBeatTime < (currentTime + this.secondsPerBeat * .5) ){
-        console.log(this.nextBeatTime);
-        this.scheduledBeats['t:' + this.nextBeatTime] = this.nextBeatTime;
+        var beatTime = this.nextBeatTime;
+        this.audioManager.scheduleEvent({
+          resourceId: "FeelTheBeat:beat",
+          action: "on",
+          time: beatTime,
+          callback: function(){
+            _this.trigger('beat:start', beatTime);
+          }
+        });
         this.nextBeatTime += this.secondsPerBeat;
       }
-      var _this = this;
       this.beatSchedulerTimer = setTimeout(function(){
         _this.scheduleBeats();
       }, this.secondsPerBeat * .5);
@@ -184,7 +189,6 @@ define(function(require){
       this.beating = true;
       this.nextBeatTime = this.audioManager.getCurrentTime();
       this.scheduleBeats();
-      this.onAnimationFrame();
     },
 
     onBeatingStop: function(){
@@ -206,27 +210,6 @@ define(function(require){
       if (this.remainingBeats <= 0){
         this.trigger('recording:stop');
         this.trigger('beating:stop');
-      }
-    },
-
-    // @TODO: factor this out into a web audio manager?
-    // This will be bound in the initialize method.
-    _unbound_onAnimationFrame: function(){
-      var currentTime = this.audioManager.getCurrentTime();
-
-      // Process scheduled beats.
-      for (var beatId in this.scheduledBeats) {
-        if (this.scheduledBeats.hasOwnProperty(beatId)) {
-          var beatTime = this.scheduledBeats[beatId];
-          if (beatTime < currentTime){
-            this.trigger('beat:start', beatTime);
-            delete this.scheduledBeats[beatId];
-          }
-        }
-      }
-
-      if (this.beating){
-        this.requestAnimationFrame(this.onAnimationFrame);
       }
     },
 

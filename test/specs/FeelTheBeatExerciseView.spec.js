@@ -8,12 +8,9 @@ define(function(require){
 
   var AudioContext = window.AudioContext || window.webkitAudioContext;
   var audioContext = new AudioContext();
-  // play something to start audio context timer.
-  var tmpOsc = audioContext.createOscillator();
-  tmpOsc.frequency.value = 440.0;
-  tmpOsc.connect(audioContext.destination);
-  tmpOsc.start(0);
-  tmpOsc.stop(.00001);
+  // Wait for context timer to start.
+  audioContext.createGain();
+  while(! audioContext.currentTime){}
 
   /*
    * Utility methods.
@@ -25,6 +22,12 @@ define(function(require){
     var AudioManager = function(){
       this.context = audioContext;
       this.loadTime = opts.loadTime || 0;
+      this.schedulingInterval = 1000/60;
+      this._boundSchedulingLoop = _.bind(this.schedulingLoop, this);
+      this._scheduledEvents = [];
+
+      // Start scheduling loop.
+      this._boundSchedulingLoop();
     };
     _.extend(AudioManager.prototype, {
       getCurrentTime: function(){
@@ -47,6 +50,26 @@ define(function(require){
           deferred.resolve(buffer);
         }
         return deferred.promise();
+      },
+
+      scheduleEvent: function(event){
+        this._scheduledEvents.push(event);
+      },
+
+      schedulingLoop: function(){
+        var currentTime = this.getCurrentTime();
+        var scheduledIdx = this._scheduledEvents.length;
+        while (scheduledIdx--){
+          var event = this._scheduledEvents[scheduledIdx];
+          if (event.time <= currentTime){
+            this._scheduledEvents.splice(scheduledIdx,1);
+            if (event.callback){
+              event.callback();
+            }
+          }
+        }
+        this.schedulingTimer = setTimeout(
+          this._boundSchedulingLoop, this.schedulingInterval);
       }
     });
 
@@ -221,6 +244,32 @@ define(function(require){
         });
 
         it('should trigger a "tap:play" event for the third tap', verifyTapPlay);
+      });
+
+      describe("when beating starts", function(){
+        beforeEach(function(){
+            view.updateSecondsPerBeat();
+        });
+
+        it("should schedule beats with audioManager", function(){
+          spyOn(view.audioManager, 'scheduleEvent');
+          view.trigger("beating:start");
+          expect(view.audioManager.scheduleEvent).toHaveBeenCalled();
+        });
+
+        it("should have 'beat:start' events triggered", function(){
+          var beatStartSpy = jasmine.createSpy('beatStartSpy');
+          view.on("beat:start", beatStartSpy);
+          runs(function(){
+            view.trigger("beating:start");
+          });
+
+          waits(view.secondsPerBeat * 2 + 100);
+
+          runs(function(){
+            expect(beatStartSpy).toHaveBeenCalled();
+          });
+        });
       });
 
       describe("recording", function(){
