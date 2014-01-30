@@ -223,7 +223,7 @@ define(function(require){
       };
       var evaluatedSubmission = this.evaluateSubmission(submission);
       this.showResults(evaluatedSubmission);
-      this.trigger('submission:end');
+      this.trigger('submission:end', evaluatedSubmission);
     },
 
     evaluateSubmission: function(submission){
