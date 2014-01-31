@@ -10,8 +10,18 @@ define(function(require){
 
   var generateResultsView = function(overrides){
     var model = new Backbone.Model(_.extend({
-      beats: [0,1,2,3],
-      taps: [.5, .9, 2, 3.2],
+      beats: [
+        {time: 0, matchingTapIdx: 0, result: 'fail'},
+        {time: 1, matchingTapIdx: 1, result: 'pass'},
+        {time: 2, matchingTapIdx: 2, result: 'pass'},
+        {time: 3, matchingTapIdx: 3, result: 'fail'},
+      ],
+      taps: [
+        {time: .5, matchingBeatIdx: 0, result: 'fail'},
+        {time: .9, matchingBeatIdx: 1, result: 'pass'},
+        {time: .2, matchingBeatIdx: 1, result: 'pass'},
+        {time: 3.2, matchingBeatIdx: 1, result: 'fail'},
+      ],
       threshold: .2
     }, overrides));
 
@@ -61,31 +71,60 @@ define(function(require){
         view.remove();
       });
 
-      var verifyMarkPositions = function(markType){
-        var $marks = view.ui[markType].find('.mark');
-        expect($marks.length).toBe(view.model.get(markType).length);
-        var expectedPositions = _.map(view.model.get(markType), view.normalizeTime, view);
-        $marks.each(function(idx, mark){
-          var pos = $(mark).attr('x1');
+      var verifyEventPositions = function(eventType){
+        var events = view.model.get(eventType + 's');
+        var $eventElements = view.$el.find('.' + eventType);
+        expect($eventElements.length).toBe(events.length);
+
+        var expectedPositions = _.map(events, function(event){
+          return view.normalizeTime(event.time);
+        });
+
+        var expectedResults = _.map(events, function(event){
+          return event.result;
+        });
+
+        $eventElements.each(function(idx, eventElement){
+          var pos = $(eventElement).attr('x1');
           expect(parseFloat(pos)).toBe(expectedPositions[idx]);
+
+          var _class = $(eventElement).attr('class');
+          expect(_class).toContain(expectedResults[idx]);
         });
       }
 
-      it('should show lines for the recorded beats', function(){
-        verifyMarkPositions('beats');
+      it('should show lines for beats', function(){
+        verifyEventPositions('beat');
       });
 
-      it("should show lines for the recorded taps", function(){
-        verifyMarkPositions('beats');
+      it("should show lines for taps", function(){
+        verifyEventPositions('tap');
       });
 
-      it("should mark whether taps were outside the threshold", function(){
-        var $marks = view.ui.taps.find('.mark');
-        var expectedGoodness = ['bad', 'good', 'good', 'bad'];
-        $marks.each(function(idx, mark){
-          // Note: can't use $.hasClass for testing, doesn't work w/ SVG.
-          expect($(mark).attr('class')).toContain(expectedGoodness[idx]);
+      it("should show links between beats and taps", function(){
+        var $links = view.$el.find('.link');
+        expect($links.length).toBe(view.model.get('beats').length);
+
+        var beats = view.model.get('beats');
+        var taps = view.model.get('taps');
+        $links.each(function(idx, linkElement){
+          var beat = beats[idx];
+          var matchingTap = taps[beat.matchingTapIdx];
+          if (! matchingTap){
+            return;
+          }
+          var beatX = view.normalizeTime(beat.time);
+          var tapX = view.normalizeTime(matchingTap.time);
+          var actualAttrs = {
+            'x1': null, 'x2': null
+          };
+          _.each(actualAttrs, function(value, key){
+            actualAttrs[key] = parseFloat($(linkElement).attr(key));
+          });
+          expect(actualAttrs.x1).toBe(beatX);
+          expect(actualAttrs.x2).toBe(tapX);
         });
+
       });
 
       // Would be nice to do this at some point but not right now.

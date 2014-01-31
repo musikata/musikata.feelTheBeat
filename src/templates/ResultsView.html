@@ -1,13 +1,7 @@
 <svg>
-    <g class="beats">
-    {{#each beatMarks}}
-    <line x1="{{x}}" y1="0" x2="{{x}}" y2="100" class="mark"/>
-    {{/each}}
-    </g>
-
-    <g class="taps">
-    {{#each tapMarks}}
-    <line x1="{{x}}" y1="0" x2="{{x}}" y2="100" class="mark {{goodness}}"/>
-    {{/each}}
-    </g>
+    {{#each elements }}
+    <{{tag}} 
+        {{#each attributes}}{{@key}}="{{this}}"{{/each}}
+    />
+    {{/each }}
 </svg>

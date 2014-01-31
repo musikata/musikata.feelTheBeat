@@ -244,20 +244,19 @@ define(function(require){
           var tap = submission.taps[i];
           var withinThresh = (tap > (beat - thresh)) && (tap < (beat + thresh));
           var result = withinThresh ? 'pass' : 'fail';
-          var resultObj = {beat: beat, tap: tap, result: result};
-          evaluatedBeats.push(resultObj);
-          evaluatedTaps.push(resultObj);
+          evaluatedBeats.push({time: beat, matchingTapIdx: i, result: result});
+          evaluatedTaps.push({time: tap, matchingBeatIdx: i, result: result});
         }
         // If no corresponding tap, fails.
         else{
-          evaluatedBeats.push({beat: beat, tap: null, result: 'fail'});
+          evaluatedBeats.push({time: beat, matchingTapIdx: null, result: 'fail'});
         }
       }
 
       // If there are taps w/out corresponding beats remaining, mark as failed.
       for (var i=numBeats; i < numTaps; i++){
         var tap = submission.taps[i];
-        evaluatedTaps.push({beat: null, tap: tap, result: 'fail'});
+        evaluatedTaps.push({time: tap, matchingBeatIdx: null, result: 'fail'});
       }
 
       // Count number of failed beats.

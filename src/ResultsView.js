@@ -9,76 +9,100 @@ define(function(require){
 
     templateHelpers: function(){
       return {
-        beatMarks: this.generateBeatMarks(),
-        tapMarks: this.generateTapMarks()
+        elements: this.generateGraphicElements(),
       };
-    },
-
-    ui: {
-      beats: '.beats',
-      taps: '.taps'
     },
 
     initialize: function(){
       this.updateTimeBounds();
-      this.updateBeatWindows();
     },
 
     updateTimeBounds: function(){
-      var combinedTimes = this.model.get('beats').concat(this.model.get('taps'));
+      var combinedEvents = this.model.get('beats').concat(this.model.get('taps'));
+      var combinedTimes = _.map(combinedEvents, function(event){
+        return event.time;
+      });
+
       _.each(['min', 'max'], function(minmax){
         this[minmax + 'Time'] = Math[minmax].apply(Math, combinedTimes);
       }, this);
       this.timeSpan = this.maxTime - this.minTime;
     },
 
-    // Generate threshold buckets around each beat for determining
-    // quality of taps.
-    updateBeatWindows: function(){
-      var threshold = this.model.get('threshold');
-      this.beatWindows = _.map(this.model.get('beats'), function(beat, idx){
-        return {
-          beat: beat,
-          index: idx,
-          min: beat - threshold,
-          max: beat + threshold
-        };
-      });
-    },
-
-    // @TODO: normalize based on minX, maxX here.
     normalizeTime: function(time){
       return (time - this.minTime)/this.timeSpan;
     },
 
-    generateBeatMarks: function(){
-      return _.map(this.model.get('beats'), function(time){
-        return {
-          x: this.normalizeTime(time)
-        };
-      }, this);
-    },
-
-    generateTapMarks: function(){
-      return _.map(this.model.get('taps'), function(time){
-        return {
-          x: this.normalizeTime(time),
-          goodness: this.isTapGood(time) ? 'good' : 'bad'
-        };
-      }, this);
-    },
-
-    // Determine whether a tap time is 'good'
-    // (falls w/in the threshold of a beat).
-    isTapGood: function(time){
-      for (var i=0; i < this.beatWindows.length; i++){
-        var beatWindow = this.beatWindows[i];
-        if ((time < beatWindow.max) && (time > beatWindow.min)){
-          return true;
+    // Generate a list of elements to draw.
+    generateGraphicElements: function(){
+      var elements = [];
+      var positionSettings = {
+        beats: {
+          y1: 5,
+          y2: 45
+        },
+        taps: {
+          y1: 55,
+          y2: 95
         }
-      }
-      return false;
-    }
+      };
+
+      var events = {
+        beats: this.model.get('beats'),
+        taps: this.model.get('taps')
+      };
+
+      // Generate lines for taps and beats.
+      _.each(events, function(eventsForType, eventType){
+        elements = elements.concat(this.generateLinesForEvents({
+          events: eventsForType,
+          attributes: {
+            y1: positionSettings[eventType].y1,
+            y2: positionSettings[eventType].y2,
+            "class": eventType.substring(0, eventType.length - 1)
+          }
+        }));
+      }, this);
+
+      // Generate connecting lines between beats and taps.
+      _.each(events.beats, function(beat){
+        var connectedTap = events.taps[beat.matchingTapIdx];
+        if (connectedTap){
+          elements.push({
+            tag: 'line',
+            attributes: {
+              x1: this.normalizeTime(beat.time),
+              y1: positionSettings.beats.y1,
+              x2: this.normalizeTime(connectedTap.time),
+              y2: positionSettings.taps.y1,
+              "class": 'link'
+            }
+          });
+        }
+      }, this);
+
+      return elements;
+    },
+
+    // Generate line elements for taps and beats.
+    generateLinesForEvents: function(opts){
+      var lines = [];
+      _.each(opts.events, function(event){
+        var x = this.normalizeTime(event.time);
+        var line = {
+          tag: 'line',
+          attributes: _.extend({
+            x1: x,
+            x2: x,
+            "class": ''
+          }, opts.attributes)
+        };
+        line.attributes.class += ' ' + event.result;
+        lines.push(line);
+      }, this);
+      return lines;
+    },
+
   });
 
   return ResultsView;

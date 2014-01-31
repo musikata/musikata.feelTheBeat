@@ -474,12 +474,12 @@ define(function(require){
 
           var expectedEvaluation = {
             beats: [
-              {beat: 0, tap: .1, result: 'pass'},
-              {beat: 1, tap: .8, result: 'fail'}
+              {time: 0, matchingTapIdx: 0 , result: 'pass'},
+              {time: 1, matchingTapIdx: 1, result: 'fail'}
             ],
             taps: [
-              {beat: 0, tap: .1, result: 'pass'},
-              {beat: 1, tap: .8, result: 'fail'}
+              {time: .1, matchingBeatIdx: 0, result: 'pass'},
+              {time: .8, matchingBeatIdx: 1, result: 'fail'}
             ],
             result: 'pass'
           };
@@ -497,11 +497,11 @@ define(function(require){
 
           var expectedEvaluation = {
             beats: [
-              {beat: 0, tap: .1, result: 'pass'},
-              {beat: 1, tap: null, result: 'fail'}
+              {time: 0, matchingTapIdx: 0 , result: 'pass'},
+              {time: 1, matchingTapIdx: null, result: 'fail'}
             ],
             taps: [
-              {beat: 0, tap: .1, result: 'pass'},
+              {time: .1, matchingBeatIdx: 0, result: 'pass'},
             ],
             result: 'pass'
           };
@@ -519,11 +519,11 @@ define(function(require){
 
           var expectedEvaluation = {
             beats: [
-              {beat: 0, tap: .1, result: 'pass'},
+              {time: 0, matchingTapIdx: 0 , result: 'pass'},
             ],
             taps: [
-              {beat: 0, tap: .1, result: 'pass'},
-              {beat: null, tap: .8, result: 'fail'},
+              {time: .1, matchingBeatIdx: 0, result: 'pass'},
+              {time: .8, matchingBeatIdx: null, result: 'fail'},
             ],
             result: 'pass'
           };
