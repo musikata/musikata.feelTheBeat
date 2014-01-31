@@ -43,13 +43,13 @@ define(function(require){
       expect(view.maxTime).toBe(3.2); // from taps
 
       var timeTests = [
-        {time: -4, expected: -1.25},
-        {time: -3.2, expected: -1},
-        {time: -2, expected: -.625},
+        {time: -4, expected: -125},
+        {time: -3.2, expected: -100},
+        {time: -2, expected: -62.5},
         {time: 0, expected: 0},
-        {time: 2, expected: .625},
-        {time: 3.2, expected: 1},
-        {time: 4, expected: 1.25},
+        {time: 2, expected: 62.5},
+        {time: 3.2, expected: 100},
+        {time: 4, expected: 125},
       ];
 
       _.each(timeTests, function(timeTest){

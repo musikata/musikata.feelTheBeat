@@ -5,6 +5,9 @@ define(function(require){
   var ResultsViewTemplate = require('text!./templates/ResultsView.html');
 
   var ResultsView = Marionette.ItemView.extend({
+    attributes: {
+      class: 'results'
+    },
     template: Handlebars.compile(ResultsViewTemplate),
 
     templateHelpers: function(){
@@ -30,7 +33,7 @@ define(function(require){
     },
 
     normalizeTime: function(time){
-      return (time - this.minTime)/this.timeSpan;
+      return 100 * (time - this.minTime)/this.timeSpan;
     },
 
     // Generate a list of elements to draw.
