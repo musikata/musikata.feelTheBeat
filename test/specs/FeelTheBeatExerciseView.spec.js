@@ -189,15 +189,15 @@ define(function(require){
 
         });
 
-        it("should 'active' class on drum class on tap start", function(){
+        it("should add 'tapping' class to drum on tap start", function(){
           view.trigger('tap:start');
-          expect(view.ui.drum.hasClass('active')).toBe(true);
+          expect(view.ui.drum.hasClass('tapping')).toBe(true);
         });
 
-        it("should remove 'active' class on drum class on tap end", function(){
+        it("should remove 'tapping' class on drum class on tap end", function(){
           view.trigger('tap:start');
           view.trigger('tap:end');
-          expect(view.ui.drum.hasClass('active')).toBe(false);
+          expect(view.ui.drum.hasClass('tapping')).toBe(false);
         });
 
         it("should trigger 'beating:start' event when the drum is tapped", function(){

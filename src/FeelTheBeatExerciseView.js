@@ -12,7 +12,7 @@ define(function(require){
     ui: {
       instructions: '.instructions',
       drum: '.drum',
-      loadingMsg: '.drum_container .msg.loading',
+      loadingMsg: '.drum-container .msg.loading',
       remainingBeats: '.remainingBeats',
       results: '.results'
     },
@@ -70,6 +70,7 @@ define(function(require){
       // Enable drum and listen for taps when audio resources have been loaded.
       this.audioPromise.done(_.bind(function(){
         this.ui.drum.removeClass('disabled');
+        this.ui.drum.addClass('enabled');
         this.ui.loadingMsg.hide();
         this.on('tap:start', this.onTapStart, this);
         this.on('tap:end', this.onTapEnd, this);
@@ -111,7 +112,7 @@ define(function(require){
 
     onTapStart: function(){
       this.tapCounter += 1;
-      this.ui.drum.addClass('active');
+      this.ui.drum.addClass('tapping');
 
       if (this.tapCounter == 1){
         this.updateSecondsPerBeat();
@@ -138,7 +139,7 @@ define(function(require){
     },
 
     onTapEnd: function(){
-      this.ui.drum.removeClass('active');
+      this.ui.drum.removeClass('tapping');
     },
 
     scheduleBeats: function(){
