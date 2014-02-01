@@ -10,14 +10,16 @@ define(function(require){
     },
     template: Handlebars.compile(ResultsViewTemplate),
 
-    templateHelpers: function(){
-      return {
-        elements: this.generateGraphicElements(),
-      };
+    ui: {
+      figure: '.figure'
     },
 
     initialize: function(){
       this.updateTimeBounds();
+    },
+
+    onRender: function(){
+      this.renderFigure();
     },
 
     updateTimeBounds: function(){
@@ -36,58 +38,131 @@ define(function(require){
       return 100 * (time - this.minTime)/this.timeSpan;
     },
 
-    // Generate a list of elements to draw.
-    generateGraphicElements: function(){
-      var elements = [];
-      var positionSettings = {
+    renderFigure: function(){
+      var svgns = "http://www.w3.org/2000/svg";
+      var svg = this.ui.figure;
+      var settings = {
+        width: 100,
+        height: 100,
         beats: {
-          y1: 5,
+          y1: 10,
           y2: 45
         },
         taps: {
           y1: 55,
           y2: 95
+        },
+        results: {
+          cy: 5,
+          r: 5
         }
       };
+
+      svg[0].setAttribute('viewBox', [0,0, settings.width, settings.height].join(' '));
+
+      var elements = [];
 
       var events = {
         beats: this.model.get('beats'),
         taps: this.model.get('taps')
       };
 
+      var setElementAttributes = function(el, attrs){
+        _.each(attrs, function(value, attr){
+          el.setAttributeNS(null, attr, value);
+        });
+      };
+
+      generateSvgElement = function(opts){
+        if (opts.tag == 'text'){
+          var el = document.createElementNS(svgns, 'text');
+          setElementAttributes(el, opts.attributes);
+          var tspanEl = document.createElementNS(svgns, 'tspan');
+          el.appendChild(tspanEl);
+        }
+        else{
+          var el = document.createElementNS(svgns, opts.tag);
+          setElementAttributes(el, opts.attributes);
+        }
+        return el;
+      };
+
+      // Generate connecting lines between beats and taps.
+      _.each(events.beats, function(beat){
+        if (beat.result == 'pass'){
+          return;
+        }
+        var connectedTap = events.taps[beat.matchingTapIdx];
+        if (! connectedTap){
+          return;
+        }
+        elements.push({
+          tag: 'line',
+          attributes: {
+            x1: this.normalizeTime(beat.time),
+            y1: settings.beats.y2,
+            x2: this.normalizeTime(connectedTap.time),
+            y2: settings.taps.y1,
+            "class": 'link'
+          }
+        });
+      }, this);
+
+      // Generate result icons.
+      _.each(events.beats, function(beat){
+        elements.push({
+          tag: 'circle',
+          attributes: {
+            cx: this.normalizeTime(beat.time),
+            cy: settings.results.cy,
+            r: settings.results.r,
+            "class": 'result-circle'
+          }
+        });
+        elements.push({
+          tag: 'text',
+          attributes: {
+            x: beat.time,
+            y: settings.results.cy,
+            "text-anchor": "middle",
+            "class": 'result-icon ' + beat.result
+          },
+        });
+      }, this);
+
+      // Generate threshold windows.
+      var thresh = this.model.get('threshold');
+      var normalizedThresh = this.normalizeTime(2 * thresh) - this.normalizeTime(thresh);
+      _.each(events.beats, function(beat){
+        elements.push({
+          tag: 'rect',
+          attributes: {
+            x: this.normalizeTime(beat.time) - normalizedThresh,
+            y: settings.beats.y1,
+            width: normalizedThresh * 2,
+            height: settings.taps.y2,
+            "class": 'threshold'
+          }
+        });
+      }, this);
+
       // Generate lines for taps and beats.
       _.each(events, function(eventsForType, eventType){
         elements = elements.concat(this.generateLinesForEvents({
           events: eventsForType,
           attributes: {
-            y1: positionSettings[eventType].y1,
-            y2: positionSettings[eventType].y2,
+            y1: settings[eventType].y1,
+            y2: settings[eventType].y2,
             "class": eventType.substring(0, eventType.length - 1)
           }
         }));
       }, this);
 
-      // Generate connecting lines between beats and taps.
-      _.each(events.beats, function(beat){
-        var connectedTap = events.taps[beat.matchingTapIdx];
-        if (connectedTap){
-          elements.push({
-            tag: 'line',
-            attributes: {
-              x1: this.normalizeTime(beat.time),
-              y1: positionSettings.beats.y1,
-              x2: this.normalizeTime(connectedTap.time),
-              y2: positionSettings.taps.y1,
-              "class": 'link'
-            }
-          });
-        }
-      }, this);
-
-      return elements;
+      _.each(elements, function(element){
+        svg.append(generateSvgElement(element));
+      });
     },
 
-    // Generate line elements for taps and beats.
     generateLinesForEvents: function(opts){
       var lines = [];
       _.each(opts.events, function(event){
