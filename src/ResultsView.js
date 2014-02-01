@@ -39,11 +39,7 @@ define(function(require){
     },
 
     renderFigure: function(){
-      var svgns = "http://www.w3.org/2000/svg";
-      var svg = this.ui.figure;
       var settings = {
-        width: 100,
-        height: 100,
         beats: {
           y1: 10,
           y2: 45
@@ -58,33 +54,11 @@ define(function(require){
         }
       };
 
-      svg[0].setAttribute('viewBox', [0,0, settings.width, settings.height].join(' '));
-
       var elements = [];
 
       var events = {
         beats: this.model.get('beats'),
         taps: this.model.get('taps')
-      };
-
-      var setElementAttributes = function(el, attrs){
-        _.each(attrs, function(value, attr){
-          el.setAttributeNS(null, attr, value);
-        });
-      };
-
-      generateSvgElement = function(opts){
-        if (opts.tag == 'text'){
-          var el = document.createElementNS(svgns, 'text');
-          setElementAttributes(el, opts.attributes);
-          var tspanEl = document.createElementNS(svgns, 'tspan');
-          el.appendChild(tspanEl);
-        }
-        else{
-          var el = document.createElementNS(svgns, opts.tag);
-          setElementAttributes(el, opts.attributes);
-        }
-        return el;
       };
 
       // Generate connecting lines between beats and taps.
@@ -97,7 +71,7 @@ define(function(require){
           return;
         }
         elements.push({
-          tag: 'line',
+          type: 'line',
           attributes: {
             x1: this.normalizeTime(beat.time),
             y1: settings.beats.y2,
@@ -111,22 +85,11 @@ define(function(require){
       // Generate result icons.
       _.each(events.beats, function(beat){
         elements.push({
-          tag: 'circle',
+          type: 'resultIcon',
           attributes: {
-            cx: this.normalizeTime(beat.time),
-            cy: settings.results.cy,
-            r: settings.results.r,
-            "class": 'result-circle'
+            x: this.normalizeTime(beat.time),
+            "class": 'result ' + beat.result
           }
-        });
-        elements.push({
-          tag: 'text',
-          attributes: {
-            x: beat.time,
-            y: settings.results.cy,
-            "text-anchor": "middle",
-            "class": 'result-icon ' + beat.result
-          },
         });
       }, this);
 
@@ -135,10 +98,9 @@ define(function(require){
       var normalizedThresh = this.normalizeTime(2 * thresh) - this.normalizeTime(thresh);
       _.each(events.beats, function(beat){
         elements.push({
-          tag: 'rect',
+          type: 'threshold',
           attributes: {
             x: this.normalizeTime(beat.time) - normalizedThresh,
-            y: settings.beats.y1,
             width: normalizedThresh * 2,
             height: settings.taps.y2,
             "class": 'threshold'
@@ -158,9 +120,48 @@ define(function(require){
         }));
       }, this);
 
+      var renderGraphicElement = function(opts){
+        var $el;
+        if (opts.type === 'event'){
+          $el = $('<div>');
+          $el.css({
+            left: opts.attributes.x + '%'
+          });
+          $el.addClass(opts.attributes.class);
+        }
+        else if (opts.type === 'threshold'){
+          $el = $('<div>');
+          $el.css({
+            left: opts.attributes.x + '%',
+            width: opts.attributes.width + '%'
+          });
+          $el.addClass(opts.attributes.class);
+        }
+        else if (opts.type === 'resultIcon'){
+          $el = $('<div><i></i></div>');
+          $el.css({
+            left: opts.attributes.x + '%',
+          });
+          $el.addClass(opts.attributes.class);
+        }
+        else if (opts.type === 'line'){
+          $el = $('<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny"><line x1="0" y1="0" x2="100%" y2="100%"/></svg>');
+          var styleProperties = {
+            left: opts.attributes.x1 + '%',
+            width: (opts.attributes.x2 - opts.attributes.x1) + '%',
+          };
+          var styleStr = _.reduce(styleProperties, function(memo, value, key){
+            return memo + [key, value].join(':') + ';';
+          }, '');
+          $el.attr('style', styleStr);
+          $el.attr('class', (opts.attributes.class));
+        }
+        return $el;
+      };
+
       _.each(elements, function(element){
-        svg.append(generateSvgElement(element));
-      });
+        this.ui.figure.append(renderGraphicElement(element));
+      }, this);
     },
 
     generateLinesForEvents: function(opts){
@@ -168,10 +169,9 @@ define(function(require){
       _.each(opts.events, function(event){
         var x = this.normalizeTime(event.time);
         var line = {
-          tag: 'line',
+          type: 'event',
           attributes: _.extend({
-            x1: x,
-            x2: x,
+            x: x,
             "class": ''
           }, opts.attributes)
         };
