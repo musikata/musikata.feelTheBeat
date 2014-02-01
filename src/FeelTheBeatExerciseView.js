@@ -201,8 +201,7 @@ define(function(require){
     },
 
     recordTap: function(){
-      // @TODO: get tap time.
-      var tapTime = 'blah';
+      var tapTime = this.audioManager.getCurrentTime();
       this.recordedTaps.push(tapTime);
     },
 
@@ -280,6 +279,7 @@ define(function(require){
     },
 
     showResults: function(evaluatedSubmission){
+      console.log(evaluatedSubmission);
       this.body.show(new ResultsView({
         model: new Backbone.Model(_.extend({
           threshold: this.model.get('threshold') * this.secondsPerBeat

@@ -159,6 +159,8 @@ define(function(require){
         return $el;
       };
 
+      console.log(JSON.stringify(elements, null, 2));
+
       _.each(elements, function(element){
         this.ui.figure.append(renderGraphicElement(element));
       }, this);
