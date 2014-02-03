@@ -165,14 +165,32 @@ define(function(require){
           $el.addClass(opts.attributes.class);
         }
         else if (opts.type === 'line'){
-          $el = $('<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny"><line x1="0" y1="0" x2="100%" y2="100%"/></svg>');
-          var styleProperties = {
-            left: opts.attributes.x1 + '%',
-            width: (opts.attributes.x2 - opts.attributes.x1) + '%',
-          };
+          var svgns = "http://www.w3.org/2000/svg";
+          $el = $('<svg xmlns="' + svgns  + '" version="1.2" baseProfile="tiny"></svg>');
+          var styleProperties;
+          var lineAttrs;
+          var lineEl = document.createElementNS(svgns, 'line');
+          if (opts.attributes.x1 < opts.attributes.x2){
+            styleProperties = {
+              left: opts.attributes.x1 + '%',
+              width: (opts.attributes.x2 - opts.attributes.x1) + '%',
+            };
+            lineAttrs = {x1: '0%', y1: '0%', x2: '100%', y2: '100%'};
+          }
+          else{
+            styleProperties = {
+              left: opts.attributes.x2 + '%',
+              width: (opts.attributes.x1 - opts.attributes.x2) + '%',
+            };
+            lineAttrs = {x1: '0%', y1: '100%', x2: '100%', y2: '0%'};
+          }
           var styleStr = _.reduce(styleProperties, function(memo, value, key){
             return memo + [key, value].join(':') + ';';
           }, '');
+          _.each(lineAttrs, function(value, attr){
+            lineEl.setAttribute(attr, value);
+          });
+          $el[0].appendChild(lineEl);
           $el.attr('style', styleStr);
           $el.attr('class', (opts.attributes.class));
         }

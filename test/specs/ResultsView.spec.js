@@ -17,7 +17,7 @@ define(function(require){
         {time: 14, matchingTapIdx: 3, result: 'fail'},
       ],
       taps: [
-        {time: 4, matchingBeatIdx: 0, result: 'fail'},
+        {time: 1, matchingBeatIdx: 0, result: 'fail'},
         {time: 7, matchingBeatIdx: 1, result: 'pass'},
         {time: 10, matchingBeatIdx: 1, result: 'pass'},
         {time: 20, matchingBeatIdx: 1, result: 'fail'},
@@ -123,8 +123,14 @@ define(function(require){
           var tapX = view.normalizeTime(matchingTap.time);
           var $link = $links.eq(linkIdx);
           actualStyle = $link.attr('style');
-          expect(actualStyle).toContain('left:' + beatX + '%');
-          expect(actualStyle).toContain('width:' +  (tapX - beatX) + '%');
+          if (beatX < tapX){
+            expect(actualStyle).toContain('left:' + beatX + '%');
+            expect(actualStyle).toContain('width:' +  (tapX - beatX) + '%');
+          }
+          else{
+            expect(actualStyle).toContain('left:' + tapX + '%');
+            expect(actualStyle).toContain('width:' +  (beatX - tapX) + '%');
+          }
           linkIdx += 1;
         });
 
