@@ -279,7 +279,6 @@ define(function(require){
     },
 
     showResults: function(evaluatedSubmission){
-      console.log(evaluatedSubmission);
       this.body.show(new ResultsView({
         model: new Backbone.Model(_.extend({
           threshold: this.model.get('threshold') * this.secondsPerBeat

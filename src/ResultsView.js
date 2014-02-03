@@ -23,14 +23,34 @@ define(function(require){
     },
 
     updateTimeBounds: function(){
-      var combinedEvents = this.model.get('beats').concat(this.model.get('taps'));
-      var combinedTimes = _.map(combinedEvents, function(event){
-        return event.time;
-      });
-
-      _.each(['min', 'max'], function(minmax){
-        this[minmax + 'Time'] = Math[minmax].apply(Math, combinedTimes);
+      // Calculate min/min max for beats and taps.
+      var stats = {};
+      var eventTypes = ['beats', 'taps'];
+      _.each(eventTypes, function(eventType){
+        stats[eventType] = {};
+        _.each(['min', 'max'], function(minmax){
+          var events = this.model.get(eventType);
+          var times = _.map(events, function(event){
+            return event.time;
+          });
+          stats[eventType][minmax] = Math[minmax].apply(Math, times);
+        }, this);
       }, this);
+
+      // Modify beat stats to include threshold.
+      var thresh = this.model.get('threshold');
+      stats.beats.min -= thresh;
+      stats.beats.max += thresh;
+
+      // Calculate overall stats.
+      _.each(['min', 'max'], function(minmax){
+        var combined = [];
+        _.each(eventTypes, function(eventType){
+          combined.push(stats[eventType][minmax]);
+        });
+        this[minmax + 'Time'] = Math[minmax].apply(Math, combined);
+      }, this);
+
       this.timeSpan = this.maxTime - this.minTime;
     },
 
@@ -158,8 +178,6 @@ define(function(require){
         }
         return $el;
       };
-
-      console.log(JSON.stringify(elements, null, 2));
 
       _.each(elements, function(element){
         this.ui.figure.append(renderGraphicElement(element));
