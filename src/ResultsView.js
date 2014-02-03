@@ -68,13 +68,10 @@ define(function(require){
           y1: 55,
           y2: 95
         },
-        results: {
-          cy: 5,
-          r: 5
-        }
       };
 
-      var elements = [];
+      var iconElements = [];
+      var timelineElements = [];
 
       var events = {
         beats: this.model.get('beats'),
@@ -90,7 +87,7 @@ define(function(require){
         if (! connectedTap){
           return;
         }
-        elements.push({
+        timelineElements.push({
           type: 'line',
           attributes: {
             x1: this.normalizeTime(beat.time),
@@ -104,7 +101,7 @@ define(function(require){
 
       // Generate result icons.
       _.each(events.beats, function(beat){
-        elements.push({
+        iconElements.push({
           type: 'resultIcon',
           attributes: {
             x: this.normalizeTime(beat.time),
@@ -117,7 +114,7 @@ define(function(require){
       var thresh = this.model.get('threshold');
       var normalizedThresh = this.normalizeTime(2 * thresh) - this.normalizeTime(thresh);
       _.each(events.beats, function(beat){
-        elements.push({
+        timelineElements.push({
           type: 'threshold',
           attributes: {
             x: this.normalizeTime(beat.time) - normalizedThresh,
@@ -130,7 +127,7 @@ define(function(require){
 
       // Generate lines for taps and beats.
       _.each(events, function(eventsForType, eventType){
-        elements = elements.concat(this.generateLinesForEvents({
+        timelineElements = timelineElements.concat(this.generateLinesForEvents({
           events: eventsForType,
           attributes: {
             y1: settings[eventType].y1,
@@ -197,9 +194,15 @@ define(function(require){
         return $el;
       };
 
-      _.each(elements, function(element){
-        this.ui.figure.append(renderGraphicElement(element));
-      }, this);
+      var $icons = this.ui.figure.find('.result-indicators');
+      _.each(iconElements, function(element){
+        $icons.append(renderGraphicElement(element));
+      });
+
+      var $timeline = this.ui.figure.find('.timeline');
+      _.each(timelineElements, function(element){
+        $timeline.append(renderGraphicElement(element));
+      });
     },
 
     generateLinesForEvents: function(opts){
