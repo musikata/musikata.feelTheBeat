@@ -574,18 +574,31 @@ define(function(require){
 
         var submissionEndSpy;
         beforeEach(function(){
-          submissionEndSpy = jasmine.createSpy('submission:end');
-          view.on('submission:end', submissionEndSpy);
-          view.submit();
+          var resultsAreShowing = false;
+          runs(function(){
+            submissionEndSpy = jasmine.createSpy('submission:end');
+            view.on('submission:end', submissionEndSpy);
+            view.body.on('show', function(){
+              resultsAreShowing = true;
+            });
+            view.submit();
+          });
+          waitsFor(function(){
+            return resultsAreShowing;
+          });
         });
 
         it('should show results', function(){
-          var isShowingResults = (view.body.currentView instanceof ResultsView);
-          expect(isShowingResults).toBe(true);
+          runs(function(){
+            var isShowingResults = (view.body.currentView instanceof ResultsView);
+            expect(isShowingResults).toBe(true);
+          });
         });
 
         it('should trigger submission completed', function(){
-          expect(submissionEndSpy).toHaveBeenCalled();
+          runs(function(){
+            expect(submissionEndSpy).toHaveBeenCalled();
+          });
         });
       });
 

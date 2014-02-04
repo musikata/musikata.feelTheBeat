@@ -9,9 +9,17 @@ define(function(require){
   var FeelTheBeatExerciseView = Marionette.Layout.extend({
     template: Handlebars.compile(FeelTheBeatExerciseViewTemplate),
 
+    templateHelpers: function(){
+      return {
+        remainingBeats: this.remainingBeats
+      };
+    },
+
     ui: {
       instructions: '.instructions',
+      tapView: '.tap-view',
       drum: '.drum',
+      drumContainer: '.drum-container',
       loadingMsg: '.drum-container .msg.loading',
       remainingBeats: '.remainingBeats',
       results: '.results'
@@ -124,13 +132,12 @@ define(function(require){
 
     onFirstTap: function(){
       this.updateSecondsPerBeat();
+      this.ui.instructions.find('li:nth-child(1)').addClass('disabled');
+      this.ui.instructions.find('li:nth-child(2)').removeClass('disabled');
       this.trigger('beating:start');
 
-      // Change instruction text.
-      this.ui.instructions.html('Try to tap along for ' + this.remainingBeats + ' beats');
-
       // Show number of beats remaining.
-      this.ui.remainingBeats.show();
+      this.ui.remainingBeats.removeClass('disabled');
       this.updateRemainingBeatsCounter();
 
       // Wire behavior for 2nd tap.
@@ -227,7 +234,6 @@ define(function(require){
       };
       var evaluatedSubmission = this.evaluateSubmission(submission);
       this.showResults(evaluatedSubmission);
-      this.trigger('submission:end', evaluatedSubmission);
     },
 
     evaluateSubmission: function(submission){
@@ -281,11 +287,28 @@ define(function(require){
     },
 
     showResults: function(evaluatedSubmission){
-      this.body.show(new ResultsView({
-        model: new Backbone.Model(_.extend({
-          threshold: this.model.get('threshold') * this.secondsPerBeat
-        } ,evaluatedSubmission))
-      }));
+      // Note: Would be nice to style this via css, but makes the logic 
+      // here a bit less clear.
+      var _this = this;
+      this.ui.tapView.fadeOut({
+        duration: 1000,
+        complete: function(){
+          // Override open method of region to fade in and trigger submission end..
+          _this.body.open = function(view){
+            this.$el.hide();
+            this.$el.html(view.el);
+            this.$el.fadeIn({duration: 1000});
+            _this.trigger('submission:end', evaluatedSubmission);
+          };
+
+          // Show the results view.
+          _this.body.show(new ResultsView({
+            model: new Backbone.Model(_.extend({
+              threshold: _this.model.get('threshold') * _this.secondsPerBeat
+            } ,evaluatedSubmission))
+          }));
+        }
+      });
     },
 
     onTapPlay: function(){

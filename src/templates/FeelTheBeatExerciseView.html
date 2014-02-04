@@ -1,18 +1,29 @@
-<div class="instructions">
-    The instructions.
-</div>
-
-<div class="remainingBeats" style="display:none;">
-    <span class="numBeats"></span> beats left
-</div>
-
 <div class="body">
-    <div class="drum-container">
-        <div class="drum disabled">
-            <div class="overlay"></div>
+    <div class="tap-view">
+        <div class="text-container">
+            <ol class="instructions">
+                <li>Tap the drum or press the spacebar to start the beat.</li>
+
+                <li class="disabled">
+                <p>Listen to the beat, feel it in your body.</p>
+                <p>Then try to play along for {{length}} beats.</p>
+
+                <p class="remainingBeats" class="disabled">
+                <span class="numBeats">{{remainingBeats}}</span> beats left
+                </p>
+
+                </li>
+
+            </ol>
         </div>
-        <div class="loading msg">
-            Loading...
+
+        <div class="drum-container">
+            <div class="drum disabled">
+                <div class="overlay"></div>
+            </div>
+            <div class="loading msg">
+                Loading...
+            </div>
         </div>
     </div>
 </div>
