@@ -8,6 +8,7 @@ define(function(require){
     attributes: {
       class: 'results'
     },
+
     template: Handlebars.compile(ResultsViewTemplate),
 
     ui: {
@@ -155,10 +156,13 @@ define(function(require){
           $el.addClass(opts.attributes.class);
         }
         else if (opts.type === 'resultIcon'){
-          $el = $('<div><i></i></div>');
+          $el = $('<div>');
           $el.css({
             left: opts.attributes.x + '%',
           });
+          $i = $('<i>');
+          $i.addClass(opts.attributes.class);
+          $el.append($i);
           $el.addClass(opts.attributes.class);
         }
         else if (opts.type === 'line'){

@@ -230,7 +230,8 @@ define(function(require){
       var submission = {
         beats: this.recordedBeats,
         taps: this.recordedTaps,
-        threshold: this.model.get('threshold') * this.secondsPerBeat
+        threshold: this.model.get('threshold') * this.secondsPerBeat,
+        maxFailedBeats: this.model.get('maxFailedBeats')
       };
       var evaluatedSubmission = this.evaluateSubmission(submission);
       this.showResults(evaluatedSubmission);
@@ -269,7 +270,7 @@ define(function(require){
       // Count number of failed beats.
       var numFailedBeats = 0;
       for (var i=0; i < evaluatedBeats.length; i++){
-        if (evaluatedBeats[i].result == 'pass'){
+        if (evaluatedBeats[i].result == 'fail'){
           numFailedBeats += 1;
         }
       }
@@ -277,9 +278,16 @@ define(function(require){
       // Set overall result based on maxFailedBeats
       var overallResult = (numFailedBeats <= submission.maxFailedBeats) ? 'pass' : 'fail';
 
+      var numBeats = evaluatedBeats.length;
+
       var evaluatedSubmission = {
         beats: evaluatedBeats,
         taps: evaluatedTaps,
+        numBeats: numBeats,
+        numPassedBeats: numBeats - numFailedBeats,
+        numFailedBeats: numFailedBeats,
+        minPassedBeats: numBeats - submission.maxFailedBeats,
+        maxFailedBeats: submission.maxFailedBeats,
         result: overallResult
       };
 
@@ -297,8 +305,12 @@ define(function(require){
           _this.body.open = function(view){
             this.$el.hide();
             this.$el.html(view.el);
-            this.$el.fadeIn({duration: 1000});
-            _this.trigger('submission:end', evaluatedSubmission);
+            this.$el.fadeIn({
+              duration: 1000,
+              complete: function(){
+                _this.trigger('submission:end', evaluatedSubmission);
+              }
+            });
           };
 
           // Show the results view.
