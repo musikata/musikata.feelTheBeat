@@ -70,10 +70,6 @@ define(function(require){
       this.on("tap:start", this.onTapStart, this);
       this.on("tap:end", this.onTapEnd, this);
 
-      // Listen for keypresses.
-      $('body').on('keydown', _.bind(this.onKeyDown, this));
-      $('body').on('keyup', _.bind(this.onKeyUp, this));
-
       // Keep track of most recent beat.
       this.on('beat:start', function(beat){
         this.mostRecentBeat = beat;
@@ -94,20 +90,6 @@ define(function(require){
     
     drumTapEnd: function(){
       this.trigger("tap:end");
-    },
-
-    onKeyDown: function(e){
-      // Spacebar.
-      if (e.keyCode == 32){
-        this.drumTapStart();
-      }
-    },
-
-    onKeyUp: function(e){
-      // Spacebar.
-      if (e.keyCode == 32){
-        this.drumTapEnd();
-      }
     },
 
     updateSecondsPerBeat: function(){
