@@ -87,7 +87,8 @@ define(function(require){
     var model = new Backbone.Model(_.extend({
       length: 4,
       bpm: 240,
-      threshold: .75
+      threshold: .75,
+      calibrationBeats: 4
     }, opts));
 
     var view = new FeelTheBeatExerciseView({
@@ -210,7 +211,7 @@ define(function(require){
         it('should trigger a "tap:play" event for the first tap', verifyTapPlay);
       });
 
-      describe('state: afterFirstTap', function(){
+      describe('after first tap', function(){
         beforeEach(function(){
           view.trigger('tap:start');
         });
@@ -228,16 +229,16 @@ define(function(require){
 
         it('should trigger a "tap:play" event for the second tap', verifyTapPlay);
 
-        it('should trigger a "recording:start" event for the second tap', function(){
-          var recordingStartSpy = jasmine.createSpy('recording:start');
-          view.on('recording:start', recordingStartSpy);
+        it('should trigger a "calibration:start" event for the second tap', function(){
+          var calibrationStartSpy = jasmine.createSpy('calibration:start');
+          view.on('calibration:start', calibrationStartSpy);
           view.trigger('tap:start');
-          expect(recordingStartSpy).toHaveBeenCalled();
+          expect(calibrationStartSpy).toHaveBeenCalled();
         });
 
       });
 
-      describe('state: afterSecondTap', function(){
+      describe('state: after second tap', function(){
         beforeEach(function(){
           view.trigger('tap:start');
           view.trigger('tap:start');
@@ -268,199 +269,205 @@ define(function(require){
         });
       });
 
-      describe("when recording", function(){
-        describe('before recording starts', function(){
-          it("should not record taps before recording has been started", function(){
-            view.trigger('tap:start');
-            expect(view.recordedTaps.length).toBe(0);
-          });
+      describe('when calibration starts', function(){
+        beforeEach(function(){
+          view.trigger('calibration:start');
+        });
 
-          it("should not record beats before recording has been started", function(){
-            view.trigger('beat:start');
-            expect(view.recordedBeats.length).toBe(0);
+        it("should not record taps", function(){
+          view.trigger('tap:start');
+          expect(view.recordedTaps.length).toBe(0);
+        });
+
+        it("should not record beats", function(){
+          view.trigger('beat:start');
+          expect(view.recordedBeats.length).toBe(0);
+        });
+
+        it("should trigger calibration beats", function(){
+          var observedBeats = [];
+          runs(function(){
+            view.on('beat:start', function(beat){
+              if (beat.type === 'calibration'){
+                observedBeats.push(beat);
+              }
+            });
+            view.trigger('beating:start');
+          });
+          waits(view.secondsPerBeat * 1000 + 200);
+          runs(function(){
+            expect(observedBeats.length).toBeGreaterThan(0);
           });
         });
 
-        describe('when recording starts', function(){
+        it("should decrement calibration beats", function(){
+          var initialCalibrationBeats = view.remainingCalibrationBeats;
+          for (var i=1; i < 2; i++){
+            view.trigger('beat:start');
+            var expectedCalibrationBeats = initialCalibrationBeats - i;
+            expect(view.remainingCalibrationBeats).toBe(expectedCalibrationBeats);
+          }
+        });
 
-          it("should record initial tap", function(){
-            view.trigger('tap:start');
-            view.trigger('tap:start');
+        it("should trigger 'calibration:stop' when calibration beats are done", function(){
+          var calibrationStopSpy = jasmine.createSpy('calibrationStopSpy');
+          view.on('calibration:stop', calibrationStopSpy);
+          for (var i=0; i < view.model.get('calibrationBeats'); i++){
+            view.trigger('beat:start');
+          }
+          expect(calibrationStopSpy).toHaveBeenCalled();
+        });
+      });
+
+      describe('when calibration stops', function(){
+        beforeEach(function(){
+          view.trigger('calibration:stop');
+        });
+
+        it("should trigger normal beats", function(){
+          var observedBeats = [];
+          runs(function(){
+            view.on('beat:start', function(beat){
+              observedBeats.push(beat);
+            });
+            view.trigger('beating:start');
+          });
+          waitsFor(function(){
+            return observedBeats.length > 0;
+          });
+          runs(function(){
+            view.trigger('beating:stop');
+            expect(observedBeats[0].type).toBe('normal');
+          });
+        });
+
+        it("should start recording", function(){
+          expect(view.isRecording).toBe(true);
+        });
+
+      });
+
+      describe('when recording starts', function(){
+
+        beforeEach(function(){
+          view.trigger('recording:start');
+        });
+
+        it("should record taps", function(){
+          view.trigger('tap:start');
+          expect(view.recordedTaps.length).toBe(1);
+        });
+
+        it("should record beats", function(){
+          view.trigger('beat:start');
+          expect(view.recordedBeats.length).toBe(1);
+        });
+
+        it('should trigger beat events until the number of beats is done', function(){
+          var recorded = false;
+          var expectedLength = view.model.get('length');
+          var expectedDuration = expectedLength * view.secondsPerBeat * 1000;
+
+          runs(function(){
+            view.once('recording:stop', function(){
+              recorded = true;
+            });
+            view.trigger('recording:start');
+            view.trigger('beating:start');
+          });
+
+          waitsFor(function(){
+            return recorded;
+          }, expectedDuration + 1000);
+
+          runs(function(){
+            expect(view.recordedBeats.length).toBe(expectedLength);
+          });
+        });
+
+        it('should decrement remainingBeats when beat events are triggered', function(){
+          var recorded = false;
+          var expectedLength = view.model.get('length');
+          var expectedDuration = expectedLength * view.secondsPerBeat * 1000;
+          var $beatCounter = view.ui.remainingBeats.find('.numBeats');
+
+          runs(function(){
+            view.once('recording:stop', function(){
+              recorded = true;
+            });
+
+            view.on('beat:start', function(beat){
+              if (view.recording){
+                expect($beatCounter.html()).toContain(view.remainingBeats);
+              }
+            });
+
+            view.trigger('recording:start');
+            view.trigger('beating:start');
+          });
+
+          waitsFor(function(){
+            return recorded;
+          }, expectedDuration + 1000);
+
+          runs(function(){
+            expect(view.recordedBeats.length).toBe(expectedLength);
+          });
+        });
+
+      });
+
+      describe('when beat recording finishes', function(){
+
+        beforeEach(function(){
+          view.trigger('recording:start');
+          view.trigger('recording:lastBeat');
+        });
+
+        it("should still record taps for .5 beats", function(){
+          var done = false;
+          runs(function(){
+            setTimeout(function(){
+              view.trigger('tap:start');
+              done = true;
+            }, view.secondsPerBeat * .1 * 1000);
+          });
+          waitsFor(function(){return done;});
+          runs(function(){
             expect(view.recordedTaps.length).toBe(1);
           });
-
-          it("should record subsequent taps", function(){
-            view.trigger('tap:start');
-            view.trigger('tap:start');
-            view.trigger('tap:start');
-            expect(view.recordedTaps.length).toBe(2);
-          });
-
-          it("should record previous beat as first beat if it occured w/in .5 beats", function(){
-
-            var recorded = false;
-            var mostRecentBeat;
-
-            runs(function(){
-              view.once('beat:start', function(beat){
-                view.off('beat:start');
-                view.trigger('beating:stop');
-                mostRecentBeat = beat;
-                setTimeout(function(){
-                  view.trigger('recording:start');
-                  view.trigger('recording:stop');
-                  recorded = true;
-                }, view.secondsPerBeat * .25 * 1000);
-
-              });
-                
-              view.trigger('beating:start');
-            });
-
-            waitsFor(function(){
-              return recorded;
-            }, 2000);
-
-            runs(function(){
-              expect(view.recordedBeats[0]).toBe(mostRecentBeat)
-            });
-          });
-
-          it("should not record previous beat as first beat, if it did not occur w/in .5 beats", function(){
-            var recorded = false;
-            var mostRecentBeat;
-
-            runs(function(){
-              view.once('beat:start', function(beat){
-                view.trigger('beating:stop');
-                mostRecentBeat = beat;
-                setTimeout(function(){
-                  view.trigger('recording:start');
-                  view.trigger('recording:stop');
-                  recorded = true;
-                }, view.secondsPerBeat * .75 * 1000);
-
-              });
-                
-              view.trigger('beating:start');
-            });
-
-            waitsFor(function(){
-              return recorded;
-            }, 2000);
-
-            runs(function(){
-              expect(view.recordedBeats.length).toBe(0);
-            });
-          });
-
-
-          it('should trigger beat events until the number of beats is done', function(){
-            var recorded = false;
-            var expectedLength = view.model.get('length');
-            var expectedDuration = expectedLength * view.secondsPerBeat * 1000;
-
-            runs(function(){
-              view.once('recording:stop', function(){
-                recorded = true;
-              });
-              view.trigger('recording:start');
-              view.trigger('beating:start');
-            });
-
-            waitsFor(function(){
-              return recorded;
-            }, expectedDuration + 1000);
-
-            runs(function(){
-              expect(view.recordedBeats.length).toBe(expectedLength);
-            });
-          });
-
-          it('should decrement remainingBeats when beat events are triggered', function(){
-            var recorded = false;
-            var expectedLength = view.model.get('length');
-            var expectedDuration = expectedLength * view.secondsPerBeat * 1000;
-            var $beatCounter = view.ui.remainingBeats.find('.numBeats');
-
-            runs(function(){
-              view.once('recording:stop', function(){
-                recorded = true;
-              });
-
-              view.on('beat:start', function(beat){
-                if (view.recording){
-                  expect($beatCounter.html()).toContain(view.remainingBeats);
-                }
-              });
-
-              view.trigger('recording:start');
-              view.trigger('beating:start');
-            });
-
-            waitsFor(function(){
-              return recorded;
-            }, expectedDuration + 1000);
-
-            runs(function(){
-              expect(view.recordedBeats.length).toBe(expectedLength);
-            });
-          });
-
         });
 
-        describe('when beat recording finishes', function(){
-
-          beforeEach(function(){
-            view.trigger('recording:start');
-            view.trigger('recording:lastBeat');
+        it("should stop recording taps after .5 beats", function(){
+          var done = false;
+          runs(function(){
+            setTimeout(function(){
+              view.trigger('tap:start');
+              done = true;
+            }, view.secondsPerBeat * .75 * 1000);
           });
-
-          it("should still record taps for .5 beats", function(){
-            var done = false;
-            runs(function(){
-              setTimeout(function(){
-                view.trigger('tap:start');
-                done = true;
-              }, view.secondsPerBeat * .1 * 1000);
-            });
-            waitsFor(function(){return done;});
-            runs(function(){
-              expect(view.recordedTaps.length).toBe(1);
-            });
+          waitsFor(function(){return done;});
+          runs(function(){
+            expect(view.recordedTaps.length).toBe(0);
           });
-
-          it("should stop recording taps after .5 beats", function(){
-            var done = false;
-            runs(function(){
-              setTimeout(function(){
-                view.trigger('tap:start');
-                done = true;
-              }, view.secondsPerBeat * .75 * 1000);
-            });
-            waitsFor(function(){return done;});
-            runs(function(){
-              expect(view.recordedTaps.length).toBe(0);
-            });
-          });
-
-          it('should stop recording after .5 beats', function(){
-            var done = false;
-            var stopRecordingSpy;
-            runs(function(){
-              stopRecordingSpy = jasmine.createSpy('stopRecordingSpy');
-              view.on('recording:stop', stopRecordingSpy);
-              setTimeout(function(){
-                done = true;
-              }, view.secondsPerBeat * .75 * 1000);
-            });
-            waitsFor(function(){return done;});
-            runs(function(){
-              expect(stopRecordingSpy).toHaveBeenCalled();
-            });
-          });
-
         });
+
+        it('should stop recording after .5 beats', function(){
+          var done = false;
+          var stopRecordingSpy;
+          runs(function(){
+            stopRecordingSpy = jasmine.createSpy('stopRecordingSpy');
+            view.on('recording:stop', stopRecordingSpy);
+            setTimeout(function(){
+              done = true;
+            }, view.secondsPerBeat * .75 * 1000);
+          });
+          waitsFor(function(){return done;});
+          runs(function(){
+            expect(stopRecordingSpy).toHaveBeenCalled();
+          });
+        });
+
       });
 
       describe("evaluation", function(){

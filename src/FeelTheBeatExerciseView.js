@@ -23,7 +23,8 @@ define(function(require){
 
     // Resources to be loaded via an audio manager.
     audioResources: [
-      'FeelTheBeat:beat',
+      'FeelTheBeat:beat:normal',
+      'FeelTheBeat:beat:calibration',
       'FeelTheBeat:tap'
     ],
 
@@ -37,8 +38,9 @@ define(function(require){
     initialize: function(options){
       this.audioManager = options.audioManager;
       this.scheduledBeats = {};
-      this.recording = false;
+      this.isRecording = false;
       this.remainingBeats = this.model.get('length');
+      this.remainingCalibrationBeats = this.model.get('calibrationBeats');
       this.tapCounter = 0;
       this.recordedTaps = [];
       this.recordedBeats = [];
@@ -56,6 +58,8 @@ define(function(require){
     onRender: function(){
       this.on('beating:start', this.onBeatingStart, this);
       this.on('beating:stop', this.onBeatingStop, this);
+      this.on('calibration:start', this.onCalibrationStart, this);
+      this.on('calibration:stop', this.onCalibrationStop, this);
       this.on('recording:start', this.onRecordingStart, this);
       this.on('recording:stop', this.onRecordingStop, this);
       this.on("tap:play", this.onTapPlay, this);
@@ -133,19 +137,32 @@ define(function(require){
         this.once('recording:stop', this.submit, this);
       }
       else if (this.tapCounter == 2){
-        this.trigger('recording:start');
-
-        // Record initial tap.
-        this.recordTap();
+        this.trigger('calibration:start');
       }
 
-      if (this.tapCounter < this.model.get('length')){
-        this.trigger('tap:play');
-      }
+      this.trigger('tap:play');
     },
 
     onTapEnd: function(){
       this.ui.drum.removeClass('tapping');
+    },
+
+    onCalibrationStart: function(){
+      this.isCalibrating = true;
+
+      var decrementCalibrationBeats = function(){
+        this.remainingCalibrationBeats -= 1;
+        if (this.remainingCalibrationBeats == 0){
+          this.off('beat:start', decrementCalibrationBeats);
+          this.trigger('calibration:stop');
+        }
+      };
+      this.on('beat:start', decrementCalibrationBeats, this);
+    },
+
+    onCalibrationStop: function(){
+      this.isCalibrating = false;
+      this.trigger('recording:start');
     },
 
     scheduleBeats: function(){
@@ -153,12 +170,13 @@ define(function(require){
       var currentTime = this.audioManager.getCurrentTime();
       while (this.nextBeatTime < (currentTime + this.secondsPerBeat * .5) ){
         var beatTime = this.nextBeatTime;
+        var beatType = this.isCalibrating ? 'calibration' :  'normal';
         this.audioManager.scheduleEvent({
           action: "sample:start",
-          sample: "FeelTheBeat:beat",
+          sample: 'FeelTheBeat:beat:' + beatType,
           time: beatTime,
           callback: function(){
-            _this.trigger('beat:start', beatTime);
+            _this.trigger('beat:start', {time: beatTime, type: beatType});
           }
         });
         this.nextBeatTime += this.secondsPerBeat;
@@ -169,6 +187,7 @@ define(function(require){
     },
 
     onRecordingStart: function(){
+      this.isRecording = true;
       this.on('tap:start', this.recordTap, this);
       this.on('beat:start', this.recordBeat, this);
 
@@ -179,7 +198,7 @@ define(function(require){
     },
 
     onRecordingStop: function(){
-      this.recording = false;
+      this.isRecording = false;
       this.off('beat:start', this.recordBeat, this);
       this.off('tap:start', this.recordTap, this);
     },
