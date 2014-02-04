@@ -247,10 +247,6 @@ define(function(require){
       });
 
       describe("when beating starts", function(){
-        beforeEach(function(){
-            view.updateSecondsPerBeat();
-        });
-
         it("should schedule beats with audioManager", function(){
           spyOn(view.audioManager, 'scheduleEvent');
           view.trigger("beating:start");
@@ -272,7 +268,7 @@ define(function(require){
         });
       });
 
-      describe("recording", function(){
+      describe("when recording", function(){
         describe('before recording starts', function(){
           it("should not record taps before recording has been started", function(){
             view.trigger('tap:start');
@@ -287,10 +283,6 @@ define(function(require){
 
         describe('when recording starts', function(){
 
-          beforeEach(function(){
-            view.updateSecondsPerBeat();
-          });
-
           it("should record initial tap", function(){
             view.trigger('tap:start');
             view.trigger('tap:start');
@@ -304,7 +296,7 @@ define(function(require){
             expect(view.recordedTaps.length).toBe(2);
           });
 
-          it("should record previous beat as first beat, if it occured w/in .5 beats", function(){
+          it("should record previous beat as first beat if it occured w/in .5 beats", function(){
 
             var recorded = false;
             var mostRecentBeat;
@@ -417,15 +409,11 @@ define(function(require){
 
         });
 
-        describe('when recording finishes', function(){
+        describe('when beat recording finishes', function(){
 
-          var submissionSpy;
           beforeEach(function(){
-            submissionSpy = jasmine.createSpy('submissionSpy');
-            view.on('submission:start', submissionSpy);
-            view.trigger('tap:start');
-            view.trigger('tap:start');
-            view.trigger('recording:stop');
+            view.trigger('recording:start');
+            view.trigger('recording:lastBeat');
           });
 
           it("should still record taps for .5 beats", function(){
@@ -438,7 +426,7 @@ define(function(require){
             });
             waitsFor(function(){return done;});
             runs(function(){
-              expect(view.recordedTaps.length).toBe(2);
+              expect(view.recordedTaps.length).toBe(1);
             });
           });
 
@@ -452,12 +440,24 @@ define(function(require){
             });
             waitsFor(function(){return done;});
             runs(function(){
-              expect(view.recordedTaps.length).toBe(1);
+              expect(view.recordedTaps.length).toBe(0);
             });
           });
 
-          it('should submit', function(){
-            expect(submissionSpy).toHaveBeenCalled();
+          it('should stop recording after .5 beats', function(){
+            var done = false;
+            var stopRecordingSpy;
+            runs(function(){
+              stopRecordingSpy = jasmine.createSpy('stopRecordingSpy');
+              view.on('recording:stop', stopRecordingSpy);
+              setTimeout(function(){
+                done = true;
+              }, view.secondsPerBeat * .75 * 1000);
+            });
+            waitsFor(function(){return done;});
+            runs(function(){
+              expect(stopRecordingSpy).toHaveBeenCalled();
+            });
           });
 
         });

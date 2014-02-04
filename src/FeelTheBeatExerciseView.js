@@ -43,6 +43,8 @@ define(function(require){
       this.recordedTaps = [];
       this.recordedBeats = [];
 
+      this.updateSecondsPerBeat();
+
       // Get promises for audio resources.
       var audioPromises = [];
       _.each(this.audioResources, function(resource){
@@ -57,6 +59,7 @@ define(function(require){
       this.on('recording:start', this.onRecordingStart, this);
       this.on('recording:stop', this.onRecordingStop, this);
       this.on("tap:play", this.onTapPlay, this);
+      this.on("recording:lastBeat", this.onLastBeat, this);
 
       // Listen for keypresses.
       $('body').on('keydown', _.bind(this.onKeyDown, this));
@@ -131,6 +134,9 @@ define(function(require){
       }
       else if (this.tapCounter == 2){
         this.trigger('recording:start');
+
+        // Record initial tap.
+        this.recordTap();
       }
 
       if (this.tapCounter < this.model.get('length')){
@@ -166,24 +172,16 @@ define(function(require){
       this.on('tap:start', this.recordTap, this);
       this.on('beat:start', this.recordBeat, this);
 
-      // Record initial tap.
-      this.recordTap();
-
       // Record most recent beat, if w/in .5 beats.
       if ((this.audioManager.getCurrentTime() - this.mostRecentBeat) < (this.secondsPerBeat * .5)){
         this.recordBeat(this.mostRecentBeat);
       }
-
     },
 
     onRecordingStop: function(){
       this.recording = false;
       this.off('beat:start', this.recordBeat, this);
-
-      // Listen for trailing taps (up to about .5 beats later)
-      setTimeout(_.bind(function(){
-        this.off('tap:start', this.recordTap, this);
-      }, this), this.secondsPerBeat * .5 * 1000);
+      this.off('tap:start', this.recordTap, this);
     },
 
     onBeatingStart: function(){
@@ -211,9 +209,16 @@ define(function(require){
       this.updateRemainingBeatsCounter();
 
       if (this.remainingBeats <= 0){
-        this.trigger('recording:stop');
         this.trigger('beating:stop');
+        this.trigger('recording:lastBeat');
       }
+    },
+
+    onLastBeat: function(){
+      // Wait for .5 beats to stop recording.
+      setTimeout(_.bind(function(){
+        this.trigger('recording:stop');
+      }, this), this.secondsPerBeat * .5 * 1000);
     },
 
     submit: function(){
