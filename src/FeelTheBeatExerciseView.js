@@ -39,7 +39,6 @@ define(function(require){
       this.scheduledBeats = {};
       this.recording = false;
       this.remainingBeats = this.model.get('length');
-      this.tapCounter = 0;
       this.recordedTaps = [];
       this.recordedBeats = [];
 
@@ -115,7 +114,6 @@ define(function(require){
     },
 
     onTapStart: function(){
-      this.tapCounter += 1;
       this.ui.drum.addClass('tapping');
       this.trigger('tap:play');
     },
@@ -134,9 +132,6 @@ define(function(require){
       // Show number of beats remaining.
       this.ui.remainingBeats.show();
       this.updateRemainingBeatsCounter();
-
-      // Submit when recording finishes.
-      this.once('recording:stop', this.submit, this);
 
       // Wire behavior for 2nd tap.
       this.once('tap:start', this.onSecondTap, this);
@@ -182,6 +177,8 @@ define(function(require){
       this.recording = false;
       this.off('beat:start', this.recordBeat, this);
       this.off('tap:start', this.recordTap, this);
+      this.off('tap:start', this.onTapStart, this);
+      this.submit();
     },
 
     onBeatingStart: function(){
