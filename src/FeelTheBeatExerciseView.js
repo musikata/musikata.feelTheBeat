@@ -278,16 +278,9 @@ define(function(require){
       // Set overall result based on maxFailedBeats
       var overallResult = (numFailedBeats <= submission.maxFailedBeats) ? 'pass' : 'fail';
 
-      var numBeats = evaluatedBeats.length;
-
       var evaluatedSubmission = {
         beats: evaluatedBeats,
         taps: evaluatedTaps,
-        numBeats: numBeats,
-        numPassedBeats: numBeats - numFailedBeats,
-        numFailedBeats: numFailedBeats,
-        minPassedBeats: numBeats - submission.maxFailedBeats,
-        maxFailedBeats: submission.maxFailedBeats,
         result: overallResult
       };
 
@@ -308,7 +301,6 @@ define(function(require){
             this.$el.fadeIn({
               duration: 1000,
               complete: function(){
-                _this.trigger('submission:end', evaluatedSubmission);
               }
             });
           };
@@ -319,6 +311,8 @@ define(function(require){
               threshold: _this.model.get('threshold') * _this.secondsPerBeat
             } ,evaluatedSubmission))
           }));
+
+          _this.trigger('submission:end', evaluatedSubmission);
         }
       });
     },

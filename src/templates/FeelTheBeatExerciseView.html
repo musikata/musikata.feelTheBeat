@@ -6,7 +6,10 @@
 
                 <li class="disabled">
                 <p>Listen to the beat, feel it in your body.</p>
-                <p>Then try to play along for {{length}} beats.</p>
+                <p>Then try to play along for {{length}} beats, without missing 
+                {{#if maxFailedBeats}} more than {{maxFailedBeats}}
+                {{else}}any{{/if}}.
+                </p>
 
                 <p class="remainingBeats" class="disabled">
                 <span class="numBeats">{{remainingBeats}}</span> beats left
