@@ -60,6 +60,8 @@ define(function(require){
       this.on('recording:stop', this.onRecordingStop, this);
       this.on("tap:play", this.onTapPlay, this);
       this.on("recording:lastBeat", this.onLastBeat, this);
+      this.on("tap:start", this.onTapStart, this);
+      this.on("tap:end", this.onTapEnd, this);
 
       // Listen for keypresses.
       $('body').on('keydown', _.bind(this.onKeyDown, this));
@@ -75,8 +77,7 @@ define(function(require){
         this.ui.drum.removeClass('disabled');
         this.ui.drum.addClass('enabled');
         this.ui.loadingMsg.hide();
-        this.on('tap:start', this.onTapStart, this);
-        this.on('tap:end', this.onTapEnd, this);
+        this.once('tap:start', this.onFirstTap, this);
       }, this));
     },
 
@@ -116,36 +117,35 @@ define(function(require){
     onTapStart: function(){
       this.tapCounter += 1;
       this.ui.drum.addClass('tapping');
-
-      if (this.tapCounter == 1){
-        this.updateSecondsPerBeat();
-
-        this.trigger('beating:start');
-
-        // Change instruction text.
-        this.ui.instructions.html('Try to tap along for ' + this.remainingBeats + ' beats');
-
-        // Show number of beats remaining.
-        this.ui.remainingBeats.show();
-        this.updateRemainingBeatsCounter();
-
-        // Submit when recording finishes.
-        this.once('recording:stop', this.submit, this);
-      }
-      else if (this.tapCounter == 2){
-        this.trigger('recording:start');
-
-        // Record initial tap.
-        this.recordTap();
-      }
-
-      if (this.tapCounter < this.model.get('length')){
-        this.trigger('tap:play');
-      }
+      this.trigger('tap:play');
     },
 
     onTapEnd: function(){
       this.ui.drum.removeClass('tapping');
+    },
+
+    onFirstTap: function(){
+      this.updateSecondsPerBeat();
+      this.trigger('beating:start');
+
+      // Change instruction text.
+      this.ui.instructions.html('Try to tap along for ' + this.remainingBeats + ' beats');
+
+      // Show number of beats remaining.
+      this.ui.remainingBeats.show();
+      this.updateRemainingBeatsCounter();
+
+      // Submit when recording finishes.
+      this.once('recording:stop', this.submit, this);
+
+      // Wire behavior for 2nd tap.
+      this.once('tap:start', this.onSecondTap, this);
+    },
+
+    onSecondTap: function(){
+      this.trigger('recording:start');
+      // Record initial tap.
+      this.recordTap();
     },
 
     scheduleBeats: function(){
