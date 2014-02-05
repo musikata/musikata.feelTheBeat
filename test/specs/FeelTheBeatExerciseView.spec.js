@@ -119,16 +119,6 @@ define(function(require){
         view.remove();
       });
 
-      /*
-       * Helper methods and common tests.
-       */
-      var verifyTapPlay = function(){
-        var tapPlaySpy = jasmine.createSpy('tap:play');
-        view.on('tap:play', tapPlaySpy);
-        view.trigger('tap:start');
-        expect(tapPlaySpy).toHaveBeenCalled();
-      };
-
       describe('ui elements', function(){
         it('should show the drum', function(){
           expect(view.$el.find('.drum').length).toBe(1);
@@ -179,7 +169,7 @@ define(function(require){
         });
       });
 
-      describe('state: initial', function(){
+      describe('initial state', function(){
 
         describe('ui elements', function(){
 
@@ -200,50 +190,53 @@ define(function(require){
           expect(view.ui.drum.hasClass('tapping')).toBe(false);
         });
 
-        it("should trigger 'beating:start' event when the drum is tapped", function(){
-          var beatingStartSpy = jasmine.createSpy('beating:start');
-          view.on('beating:start', beatingStartSpy);
+        it('should trigger a "tap:play" event for taps', function(){
+          var tapPlaySpy = jasmine.createSpy('tap:play');
+          view.on('tap:play', tapPlaySpy);
           view.trigger('tap:start');
-          expect(beatingStartSpy).toHaveBeenCalled();
+          expect(tapPlaySpy).toHaveBeenCalled();
         });
 
-        it('should trigger a "tap:play" event for the first tap', verifyTapPlay);
+        it("should startBeating on action click", function(){
+          var startBeatingSpy = jasmine.createSpy('startBeatingSpy');
+          view.on('startBeating', startBeatingSpy);
+          view.ui.actionButton.trigger('click');
+          expect(startBeatingSpy).toHaveBeenCalled();
+        });
+
       });
 
-      describe('state: afterFirstTap', function(){
+      describe('after startBeating', function(){
         beforeEach(function(){
-          view.trigger('tap:start');
+          view.trigger('startBeating');
         });
 
-        describe('ui elements', function(){
-          it('should show number of beats to tap in instructions', function(){
-            var expectedBeatText = view.model.get('length') + ' beats';
-            expect(view.ui.instructions.html()).toContain(expectedBeatText);
-          });
-
-          it('should show number of beats remaining', function(){
-            expect(view.ui.remainingBeats.html()).toContain(view.remainingBeats);
-          });
+        it('should trigger prepare to record on action click', function(){
+          var prepareToRecordSpy = jasmine.createSpy('prepareToRecordSpy');
+          view.on('prepareToRecord', prepareToRecordSpy);
+          view.ui.actionButton.trigger('click');
+          expect(prepareToRecordSpy).toHaveBeenCalled();
         });
 
-        it('should trigger a "tap:play" event for the second tap', verifyTapPlay);
+      });
 
-        it('should trigger a "recording:start" event for the second tap', function(){
+      describe('after prepare to record', function(){
+        beforeEach(function(){
+          view.trigger('prepareToRecord');
+        });
+
+        it('should trigger a "recording:start" event for the next tap', function(){
           var recordingStartSpy = jasmine.createSpy('recording:start');
           view.on('recording:start', recordingStartSpy);
           view.trigger('tap:start');
           expect(recordingStartSpy).toHaveBeenCalled();
         });
 
-      });
-
-      describe('state: afterSecondTap', function(){
-        beforeEach(function(){
-          view.trigger('tap:start');
-          view.trigger('tap:start');
+        it('should show number of remaining beats in action button', function(){
+          var expectedBeatText = view.model.get('length');
+          expect(view.ui.actionButton.html()).toContain(expectedBeatText);
         });
 
-        it('should trigger a "tap:play" event for the third tap', verifyTapPlay);
       });
 
       describe("when beating starts", function(){
@@ -283,13 +276,13 @@ define(function(require){
       describe('when recording starts', function(){
 
         it("should record initial tap", function(){
-          view.trigger('tap:start');
+          view.trigger('prepareToRecord');
           view.trigger('tap:start');
           expect(view.recordedTaps.length).toBe(1);
         });
 
         it("should record subsequent taps", function(){
-          view.trigger('tap:start');
+          view.trigger('prepareToRecord');
           view.trigger('tap:start');
           view.trigger('tap:start');
           expect(view.recordedTaps.length).toBe(2);

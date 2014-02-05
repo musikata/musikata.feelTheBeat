@@ -2,19 +2,18 @@
     <div class="tap-view">
         <div class="text-container">
             <ol class="instructions">
-                <li>Tap the drum to start the beat.</li>
+                <li>Tap 'start beat'.</li>
 
                 <li class="disabled">
-                <p>Listen to the beat, feel it in your body.</p>
-                <p>Then tap along for <strong>{{length}}</strong> beats, without missing 
+                <p>Listen to the beat, feel it in your body. Try to tap along with it on the drum.</p>
+                <p>When you're ready, tap 'prepare to record'</p>
+                </li>
+
+                <li class="disabled">
+                <p>Tap on the drum for <strong>{{length}}</strong> beats, without missing 
                 {{#if maxFailedBeats}} more than <strong>{{maxFailedBeats}}</strong>
                 {{else}}<strong>any</strong>{{/if}}.
                 </p>
-
-                <p class="remainingBeats" class="disabled">
-                <strong><span class="numBeats">{{remainingBeats}}</span></strong> beats left
-                </p>
-
                 </li>
 
             </ol>
@@ -27,6 +26,7 @@
             <div class="loading msg">
                 Loading...
             </div>
+            <button class="action-button">start beat</button>
         </div>
     </div>
 </div>

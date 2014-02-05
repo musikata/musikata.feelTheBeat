@@ -35,7 +35,7 @@ define(function(require){
         return 'On the beat';
       }
       else {
-        return 'Off, missed too many beats';
+        return 'Too many taps were off';
       }
     },
 
