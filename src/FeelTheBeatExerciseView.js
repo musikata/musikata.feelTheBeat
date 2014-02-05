@@ -36,9 +36,9 @@ define(function(require){
     ],
 
     events: {
-      "touchstart @ui.drum": "drumTapStart",
+      "touchstart @ui.drum": "drumTouchStart",
+      "touchend @ui.drum": "drumTouchEnd",
       "mousedown @ui.drum": "drumTapStart",
-      "touchend @ui.drum": "drumTapEnd",
       "mouseup @ui.drum": "drumTapEnd",
     },
 
@@ -82,6 +82,16 @@ define(function(require){
         this.ui.loadingMsg.hide();
         this.once('tap:start', this.onFirstTap, this);
       }, this));
+    },
+
+    drumTouchStart: function(e){
+      e.preventDefault();
+      this.drumTapStart();
+    },
+
+    drumTouchEnd: function(e){
+      e.preventDefault();
+      this.drumTapEnd();
     },
 
     drumTapStart: function(){
