@@ -11,6 +11,12 @@ define(function(require){
 
     template: Handlebars.compile(ResultsViewTemplate),
 
+    templateHelpers: function(){
+      return {
+        resultText: this.generateResultText()
+      };
+    },
+
     ui: {
       figure: '.figure'
     },
@@ -21,6 +27,16 @@ define(function(require){
 
     onRender: function(){
       this.renderFigure();
+    },
+
+    generateResultText: function(){
+      var result = this.model.get('result');
+      if (result === 'pass'){
+        return 'On the beat';
+      }
+      else {
+        return 'Off, missed too many beats';
+      }
     },
 
     updateTimeBounds: function(){
