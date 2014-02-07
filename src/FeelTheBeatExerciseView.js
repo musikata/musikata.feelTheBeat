@@ -8,7 +8,7 @@ define(function(require){
 
   var FeelTheBeatExerciseView = Marionette.Layout.extend({
     attributes: {
-      class: 'feel-the-beat-exercise'
+      class: 'exercise feel-the-beat-exercise'
     },
     template: Handlebars.compile(FeelTheBeatExerciseViewTemplate),
 
