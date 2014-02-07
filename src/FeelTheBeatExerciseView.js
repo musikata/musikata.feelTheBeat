@@ -19,14 +19,14 @@ define(function(require){
     },
 
     ui: {
-      instructions: '.instructions',
       tapView: '.tap-view',
+      instructions: '.instructions',
+      continueButton: '.continue-button',
       drum: '.drum',
       drumContainer: '.drum-region',
       loadingMsg: '.drum-region .msg.loading',
-      remainingBeats: '.remainingBeats',
+      remainingBeats: '.remaining-beats',
       results: '.results',
-      actionButton: '.action-button',
     },
 
     regions: {
@@ -74,8 +74,8 @@ define(function(require){
       this.on("tap:start", this.onTapStart, this);
       this.on("tap:end", this.onTapEnd, this);
 
-      this.on("startBeating", this.onStartBeating, this);
-      this.on("prepareToRecord", this.onPrepareToRecord, this);
+      this.on("stepTwo", this.onStepTwo, this);
+      this.on("stepThree", this.onStepThree, this);
 
       // Keep track of most recent beat.
       this.on('beat:start', function(beat){
@@ -83,18 +83,34 @@ define(function(require){
       }, this);
 
       // Enable drum and listen for taps when audio resources have been loaded.
+      // Remove loading message and wire first tap to advance to step two.
       this.audioPromise.done(_.bind(function(){
         this.ui.drum.removeClass('disabled');
         this.ui.drum.addClass('enabled');
         this.ui.loadingMsg.hide();
-
-        // Wire behavior for action button tap.
-        this.ui.actionButton.on('click', _.bind(function(){
-          this.ui.actionButton.off('click');
-          this.trigger('startBeating');
-        }, this));
-
+        this.once('tap:start', function(){this.trigger('stepTwo')}, this);
       }, this));
+    },
+
+    advanceInstructions: function(){
+      var $curInstruction = this.ui.instructions.find('li.active');
+      var $nextInstruction = $curInstruction.next();
+      $curInstruction.fadeOut({
+        duration: 1000,
+        start: function(){
+          $curInstruction.css('display', 'block');
+          $curInstruction.removeClass('active');
+        },
+        complete: function(){
+          $curInstruction.css('display', '');
+          $nextInstruction.fadeIn({
+            duration: 1000,
+            start: function(){
+              $nextInstruction.addClass('active');
+            }
+          });
+        }
+      })
     },
 
     drumTouchStart: function(e){
@@ -122,8 +138,9 @@ define(function(require){
       this.secondsPerBeat = 60.0/this.model.get('bpm');
     },
 
-    updateRemainingBeatsCounter: function(){
-      this.ui.actionButton.html(this.remainingBeats + ' more');
+    updateRemainingBeats: function(){
+      var pluralizedBeats = (this.remainingBeats == 1) ? 'beat' : 'beats';
+      this.ui.remainingBeats.html(this.remainingBeats + ' ' + pluralizedBeats + ' left');
     },
 
     onTapStart: function(){
@@ -136,38 +153,31 @@ define(function(require){
     },
 
     // Advance instructions, start beat, listen for record action.
-    onStartBeating: function(){
-      this.ui.instructions.find('li:nth-child(1)').addClass('disabled');
-      this.ui.instructions.find('li:nth-child(2)').removeClass('disabled');
-      this.ui.actionButton.html('prepare to record');
+    onStepTwo: function(){
+      this.advanceInstructions();
       this.trigger('beating:start');
 
-      // Wire behavior for action button tap.
-      this.ui.actionButton.on('click', _.bind(function(){
-        this.ui.actionButton.off('click');
-        this.trigger('prepareToRecord');
+      // Wire continue button to advance to step three.
+      this.ui.continueButton.on('click', _.bind(function(){
+        this.ui.continueButton.off('click');
+        this.trigger('stepThree');
       }, this));
     },
 
     // Advance instructions, start recording on next tap.
-    onPrepareToRecord: function(){
-      this.ui.instructions.find('li:nth-child(2)').addClass('disabled');
-      this.ui.instructions.find('li:nth-child(3)').removeClass('disabled');
-      this.updateRemainingBeatsCounter();
-      this.ui.actionButton.prop('disabled', true);
+    onStepThree: function(){
+      this.advanceInstructions();
+      this.updateRemainingBeats();
       this.ui.drum.addClass('prepare-recording');
 
       // Start recording on next tap.
       this.once('tap:start', function(){
         this.ui.drum.removeClass('prepare-recording');
         this.ui.drum.addClass('recording');
-        this.updateRemainingBeatsCounter();
+        this.updateRemainingBeats();
         this.trigger('recording:start');
         this.recordTap();
       }, this);
-    },
-
-    onSecondTap: function(){
     },
 
     scheduleBeats: function(){
@@ -230,7 +240,7 @@ define(function(require){
     recordBeat: function(beat){
       this.recordedBeats.push(beat);
       this.remainingBeats -= 1;
-      this.updateRemainingBeatsCounter();
+      this.updateRemainingBeats();
 
       if (this.remainingBeats <= 0){
         this.trigger('beating:stop');

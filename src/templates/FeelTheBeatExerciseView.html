@@ -1,22 +1,25 @@
 <div class="body-region">
     <div class="tap-view">
         <div class="text-region">
-            <ol class="instructions">
-                <li>Tap 'start beat'.</li>
+            <ul class="instructions">
+                <li class="active">Tap the drum to start the beat.</li>
 
-                <li class="disabled">
-                <p>Listen to the beat, feel it in your body. Try to tap along with it on the drum.</p>
-                <p>When you're ready, tap 'prepare to record'</p>
+                <li>
+                <p>Relax your mind.</p>
+                <p>Listen to the beat, feel it in your body.</p>
+                <p>Try tapping along on the drum.</p>
+                <button class="continue-button">tap here to continue</button>
                 </li>
 
-                <li class="disabled">
-                <p>Tap on the drum for <strong>{{length}}</strong> beats, without missing 
+                <li>
+                <p>Tap along for <strong>{{length}}</strong> beats, without missing 
                 {{#if maxFailedBeats}} more than <strong>{{maxFailedBeats}}</strong>
-                {{else}}<strong>any</strong>{{/if}}.
-                </p>
+                {{else}}<strong>any</strong>{{/if}}.</p>
+                <p>Tap the drum to start</p>
+                <p><strong><span class="remaining-beats"></span></strong></p>
                 </li>
 
-            </ol>
+            </ul>
         </div>
 
         <div class="drum-region">
@@ -26,7 +29,6 @@
             <div class="loading msg">
                 Loading...
             </div>
-            <button class="action-button">start beat</button>
         </div>
     </div>
 </div>

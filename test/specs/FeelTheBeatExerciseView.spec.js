@@ -197,32 +197,32 @@ define(function(require){
           expect(tapPlaySpy).toHaveBeenCalled();
         });
 
-        it("should startBeating on action click", function(){
-          var startBeatingSpy = jasmine.createSpy('startBeatingSpy');
-          view.on('startBeating', startBeatingSpy);
-          view.ui.actionButton.trigger('click');
-          expect(startBeatingSpy).toHaveBeenCalled();
+        it("should go to step two on drum tap", function(){
+          var stepTwoSpy = jasmine.createSpy('stepTwoSpy');
+          view.on('stepTwo', stepTwoSpy);
+          view.trigger('tap:start');
+          expect(stepTwoSpy).toHaveBeenCalled();
         });
 
       });
 
-      describe('after startBeating', function(){
+      describe('step two', function(){
         beforeEach(function(){
-          view.trigger('startBeating');
+          view.trigger('stepTwo');
         });
 
-        it('should trigger prepare to record on action click', function(){
-          var prepareToRecordSpy = jasmine.createSpy('prepareToRecordSpy');
-          view.on('prepareToRecord', prepareToRecordSpy);
-          view.ui.actionButton.trigger('click');
-          expect(prepareToRecordSpy).toHaveBeenCalled();
+        it('should trigger step three on click continue', function(){
+          var stepThreeSpy = jasmine.createSpy('stepThreeSpy');
+          view.on('stepThree', stepThreeSpy);
+          view.ui.continueButton.trigger('click');
+          expect(stepThreeSpy).toHaveBeenCalled();
         });
 
       });
 
-      describe('after prepare to record', function(){
+      describe('step three', function(){
         beforeEach(function(){
-          view.trigger('prepareToRecord');
+          view.trigger('stepThree');
         });
 
         it('should trigger a "recording:start" event for the next tap', function(){
@@ -232,9 +232,9 @@ define(function(require){
           expect(recordingStartSpy).toHaveBeenCalled();
         });
 
-        it('should show number of remaining beats in action button', function(){
+        it('should show number of remaining beats', function(){
           var expectedBeatText = view.model.get('length');
-          expect(view.ui.actionButton.html()).toContain(expectedBeatText);
+          expect(view.ui.remainingBeats.html()).toContain(expectedBeatText);
         });
 
       });
@@ -276,13 +276,13 @@ define(function(require){
       describe('when recording starts', function(){
 
         it("should record initial tap", function(){
-          view.trigger('prepareToRecord');
+          view.trigger('stepThree');
           view.trigger('tap:start');
           expect(view.recordedTaps.length).toBe(1);
         });
 
         it("should record subsequent taps", function(){
-          view.trigger('prepareToRecord');
+          view.trigger('stepThree');
           view.trigger('tap:start');
           view.trigger('tap:start');
           expect(view.recordedTaps.length).toBe(2);
