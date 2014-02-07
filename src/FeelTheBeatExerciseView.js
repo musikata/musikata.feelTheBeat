@@ -7,6 +7,9 @@ define(function(require){
   var FeelTheBeatExerciseViewTemplate = require("text!./templates/FeelTheBeatExerciseView.html");
 
   var FeelTheBeatExerciseView = Marionette.Layout.extend({
+    attributes: {
+      class: 'feel-the-beat-exercise'
+    },
     template: Handlebars.compile(FeelTheBeatExerciseViewTemplate),
 
     templateHelpers: function(){
@@ -19,15 +22,15 @@ define(function(require){
       instructions: '.instructions',
       tapView: '.tap-view',
       drum: '.drum',
-      drumContainer: '.drum-container',
-      loadingMsg: '.drum-container .msg.loading',
+      drumContainer: '.drum-region',
+      loadingMsg: '.drum-region .msg.loading',
       remainingBeats: '.remainingBeats',
       results: '.results',
       actionButton: '.action-button',
     },
 
     regions: {
-      body: '.body'
+      body: '.body-region'
     },
 
     // Resources to be loaded via an audio manager.
