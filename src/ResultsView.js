@@ -154,39 +154,27 @@ define(function(require){
         }));
       }, this);
 
-      // We set both horizontal/vertical dimensions here,
-      // and let the CSS sort out which to use for portrait/landscape orientation,
-      // via '!important' attributes. Kludgy? Oh yes.
-      // Does it make me nervous? You better believe it. But it works.
       var renderGraphicElement = function(opts){
         var $el;
         if (opts.type === 'event'){
           $el = $('<div>');
-          var pos = opts.attributes.x + '%';
           $el.css({
-            left: pos,
-            top: pos 
+            left: opts.attributes.x + '%'
           });
           $el.addClass(opts.attributes.class);
         }
         else if (opts.type === 'threshold'){
           $el = $('<div>');
-          var pos = opts.attributes.x + '%';
-          var width = opts.attributes.width + '%';
           $el.css({
-            left: pos,
-            top: pos,
-            width: width,
-            height: width,
+            left: opts.attributes.x + '%',
+            width: opts.attributes.width + '%'
           });
           $el.addClass(opts.attributes.class);
         }
         else if (opts.type === 'resultIcon'){
           $el = $('<div>');
-          var pos = opts.attributes.x + '%';
           $el.css({
-            left: pos,
-            top: pos,
+            left: opts.attributes.x + '%',
           });
           $i = $('<i>');
           $i.addClass(opts.attributes.class);
@@ -200,24 +188,16 @@ define(function(require){
           var lineAttrs;
           var lineEl = document.createElementNS(svgns, 'line');
           if (opts.attributes.x1 < opts.attributes.x2){
-            var pos = opts.attributes.x1 + '%';
-            var width = (opts.attributes.x2 - opts.attributes.x1) + '%',
             styleProperties = {
-              left: pos,
-              top: pos,
-              width: width,
-              height: width
+              left: opts.attributes.x1 + '%',
+              width: (opts.attributes.x2 - opts.attributes.x1) + '%',
             };
             lineAttrs = {x1: '0%', y1: '0%', x2: '100%', y2: '100%'};
           }
           else{
-            var pos = opts.attributes.x2 + '%';
-            var width = (opts.attributes.x1 - opts.attributes.x2) + '%',
             styleProperties = {
-              left: pos,
-              top: pos,
-              width: width,
-              height: width,
+              left: opts.attributes.x2 + '%',
+              width: (opts.attributes.x1 - opts.attributes.x2) + '%',
             };
             lineAttrs = {x1: '0%', y1: '100%', x2: '100%', y2: '0%'};
           }
