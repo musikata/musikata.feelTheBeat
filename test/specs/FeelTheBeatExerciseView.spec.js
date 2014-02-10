@@ -181,13 +181,13 @@ define(function(require){
 
         it("should add 'tapping' class to drum on tap start", function(){
           view.trigger('tap:start');
-          expect(view.ui.drum.hasClass('tapping')).toBe(true);
+          expect(view.ui.drum.attr('class')).toContain('tapping');
         });
 
         it("should remove 'tapping' class on drum class on tap end", function(){
           view.trigger('tap:start');
           view.trigger('tap:end');
-          expect(view.ui.drum.hasClass('tapping')).toBe(false);
+          expect(view.ui.drum.attr('class')).not.toContain('tapping');
         });
 
         it('should trigger a "tap:play" event for taps', function(){
@@ -612,7 +612,7 @@ define(function(require){
         view.render();
         $('body').append(view.el);
 
-        expect(view.ui.drum.hasClass('disabled')).toBe(true);
+        expect(view.ui.drum.attr('class')).toContain('disabled');
         expect(view.ui.loadingMsg.is(':visible')).toBe(true);
       });
 

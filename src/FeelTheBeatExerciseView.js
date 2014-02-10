@@ -85,8 +85,7 @@ define(function(require){
       // Enable drum and listen for taps when audio resources have been loaded.
       // Remove loading message and wire first tap to advance to step two.
       this.audioPromise.done(_.bind(function(){
-        this.ui.drum.removeClass('disabled');
-        this.ui.drum.addClass('enabled');
+        this.ui.drum.attr('class', 'drum');
         this.ui.loadingMsg.hide();
         this.once('tap:start', function(){this.trigger('stepTwo')}, this);
       }, this));
@@ -144,12 +143,12 @@ define(function(require){
     },
 
     onTapStart: function(){
-      this.ui.drum.addClass('tapping');
+      this.ui.drum.attr('class', 'drum tapping');
       this.trigger('tap:play');
     },
 
     onTapEnd: function(){
-      this.ui.drum.removeClass('tapping');
+      this.ui.drum.attr('class', 'drum');
     },
 
     // Advance instructions, start beat, listen for record action.
