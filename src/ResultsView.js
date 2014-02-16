@@ -5,9 +5,7 @@ define(function(require){
   var ResultsViewTemplate = require('text!./templates/ResultsView.html');
 
   var ResultsView = Marionette.ItemView.extend({
-    attributes: {
-      class: 'results-view'
-    },
+    className: 'results-view',
 
     template: Handlebars.compile(ResultsViewTemplate),
 
