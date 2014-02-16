@@ -165,12 +165,11 @@ define(function(require){
     onStepThree: function(){
       this.advanceInstructions();
       this.updateRemainingBeats();
-      this.ui.drum.addClass('prepare-recording');
+      this.ui.drum.attr('class', 'drum prepare-recording');
 
       // Start recording on next tap.
       this.once('tap:start', function(){
-        this.ui.drum.removeClass('prepare-recording');
-        this.ui.drum.addClass('recording');
+        this.ui.drum.attr('class', 'drum recording');
         this.updateRemainingBeats();
         this.trigger('recording:start');
         this.recordTap();
