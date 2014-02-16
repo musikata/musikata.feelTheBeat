@@ -248,7 +248,7 @@ define(function(require){
       // Wait for .5 beats to stop recording.
       setTimeout(_.bind(function(){
         this.trigger('recording:stop');
-        this.ui.drum.removeClass('recording');
+        this.ui.drum.attr('class', 'drum');
       }, this), this.secondsPerBeat * .5 * 1000);
     },
 
