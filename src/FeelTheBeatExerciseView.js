@@ -6,6 +6,8 @@ define(function(require){
   var ResultsView = require("./ResultsView");
   var FeelTheBeatExerciseViewTemplate = require("text!./templates/FeelTheBeatExerciseView.html");
 
+  var Samples = require('./samples');
+
   var FeelTheBeatExerciseView = Marionette.Layout.extend({
     className: 'exercise feel-the-beat-exercise',
     template: Handlebars.compile(FeelTheBeatExerciseViewTemplate),
@@ -31,12 +33,6 @@ define(function(require){
       body: '.body-region'
     },
 
-    // Resources to be loaded via an audio manager.
-    audioResources: [
-      'FeelTheBeat:beat',
-      'FeelTheBeat:tap'
-    ],
-
     events: {
       "touchstart @ui.drum": "drumTouchStart",
       "touchend @ui.drum": "drumTouchEnd",
@@ -54,12 +50,12 @@ define(function(require){
 
       this.updateSecondsPerBeat();
 
-      // Get promises for audio resources.
-      var audioPromises = [];
-      _.each(this.audioResources, function(resource){
-        audioPromises.push(this.audioManager.getPromise(resource));
+      // Get promises for sample processing.
+      var samplePromises = [];
+      _.each(Samples, function(sample){
+        samplePromises.push(this.audioManager.loadSample(sample));
       }, this);
-      this.audioPromise = $.when.apply($, audioPromises);
+      this.samplePromise = $.when.apply($, samplePromises);
     },
 
     onRender: function(){
@@ -80,9 +76,9 @@ define(function(require){
         this.mostRecentBeat = beat;
       }, this);
 
-      // Enable drum and listen for taps when audio resources have been loaded.
+      // Enable drum and listen for taps when samples have been loaded.
       // Remove loading message and wire first tap to advance to step two.
-      this.audioPromise.done(_.bind(function(){
+      this.samplePromise.done(_.bind(function(){
         this.ui.drum.attr('class', 'drum');
         this.ui.loadingMsg.hide();
         this.once('tap:start', function(){this.trigger('stepTwo')}, this);

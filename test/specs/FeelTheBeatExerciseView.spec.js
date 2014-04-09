@@ -33,21 +33,19 @@ define(function(require){
       getCurrentTime: function(){
         return this.context.currentTime;
       },
-      getPromise: function(resource){
-        // Fake loading by creating noise buffer.
-        var buffer = this.context.createBuffer(1, 44100, 44100);
-        var data = buffer.getChannelData(0);
-        for (i = 0; i < data.length; i++) {
-          data[i] = 0;
-        }
+      loadSample: function(){
+        return this.getPromise();
+      },
+      getPromise: function(){
+        // Fake deferred.
         var deferred = new $.Deferred();
         if (this.loadTime){
           setTimeout(function(){
-            deferred.resolve(buffer);
+            deferred.resolve();
           }, this.loadTime);
         }
         else{
-          deferred.resolve(buffer);
+          deferred.resolve();
         }
         return deferred.promise();
       },
