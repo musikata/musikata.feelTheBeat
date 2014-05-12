@@ -1,4 +1,5 @@
 define(function(require){
+  var _ = require('underscore');
   var Backbone = require('backbone');
   var Marionette = require('marionette');
   var Handlebars = require('handlebars');
@@ -11,6 +12,7 @@ define(function(require){
   var FeelTheBeatExerciseView = Marionette.Layout.extend({
     className: 'exercise feel-the-beat-exercise',
     template: Handlebars.compile(FeelTheBeatExerciseViewTemplate),
+    submissionType: 'manual',
 
     templateHelpers: function(){
       return {
@@ -249,7 +251,7 @@ define(function(require){
     },
 
     submit: function(){
-      this.trigger('submission:start');
+      this.model.get('submission').set('state', 'submitting');
       var submission = {
         beats: this.recordedBeats,
         taps: this.recordedTaps,
@@ -314,10 +316,11 @@ define(function(require){
       // Note: Would be nice to style this via css, but makes the logic 
       // here a bit less clear.
       var _this = this;
+      // Fade out main view and trigger submission end.
       this.ui.tapView.fadeOut({
         duration: 1000,
         complete: function(){
-          // Override open method of region to fade in and trigger submission end..
+          // Override open method of region to fade in.
           _this.body.open = function(view){
             this.$el.hide();
             this.$el.html(view.el);
@@ -335,7 +338,10 @@ define(function(require){
             } ,evaluatedSubmission))
           }));
 
-          _this.trigger('submission:end', evaluatedSubmission);
+          // Update the submission model.
+          _this.model.get('submission').set(_.extend({state: 'completed'},
+            evaluatedSubmission));
+
         }
       });
     },
